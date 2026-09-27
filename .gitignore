@@ -1,0 +1,12 @@
+# Ambiente virtual - NUNCA versionar
+.venv/
+
+# Cache e compilação do Python
+__pycache__/
+*.pyc
+
+# Evidências de teste (prints gerados)
+*.png
+
+# Dados do PyCharm
+.idea/
