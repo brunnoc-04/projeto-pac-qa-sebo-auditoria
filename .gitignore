@@ -5,8 +5,9 @@
 __pycache__/
 *.pyc
 
-# Evidências de teste (prints gerados)
+# Evidências de teste: ignora PNGs gerados, EXCETO os da pasta evidencias
 *.png
+!evidencias/**/*.png
 
 # Dados do PyCharm
 .idea/
