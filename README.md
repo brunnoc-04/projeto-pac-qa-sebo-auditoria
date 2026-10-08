@@ -58,7 +58,7 @@ a saúde financeira de cada anúncio.
 - **Fotos:** 2 = bom estado • 4 = avaria evidenciada e descrita • 1 ou 3 = ERRO
 - **Dicionário de avarias:** rasgo, grifo, mancha, oxidação, lombada gasta, amarelado, rasura, sublinhação, marcação
 
-Detalhes completos: [Documentação de Requisitos e RNs](docs/requisitos-rns.html) e [Plano de Testes v2.0](docs/plano-de-testes.html).
+Detalhes completos: [Documentação de Requisitos e RNs](https://brunnoc-04.github.io/projeto-pac-qa-sebo-auditoria/requisitos-rns.html) e [Plano de Testes v2.0](https://brunnoc-04.github.io/projeto-pac-qa-sebo-auditoria/plano-de-testes.html).
 
 ## 📁 Estrutura
 
