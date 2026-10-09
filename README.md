@@ -1,74 +1,74 @@
-# 🔍 Auditoria de QA para Sebos e Livrarias Independentes em Marketplaces
+# 🔍 Auditoria de QA para Sebo em Marketplace: Estante Virtual
 
-> Projeto PAC — TripleTen Brasil | Autor: **Brunno Cesar** — Analista de QA
+**Projeto PAC — TripleTen Brasil | Autor: Brunno Cesar, Analista de QA**
 
-Auditoria de qualidade aplicada à operação de um sebo que vende os mesmos livros
-em dois canais — **Estante Virtual (EV)** e **Mercado Livre (ML)** — sem um
-sistema integrador entre eles. A tese: **na ausência de integração, os canais
-dessincronizam** (preços divergentes, anúncios ativos sem estoque, estado de
-conservação inconsistente), gerando venda fantasma, mediação no SAC e perda de
-reputação. A suíte **demonstra** essas falhas com evidência material e quantifica
-a saúde financeira de cada anúncio.
+## 📖 Sobre o projeto
 
----
+Auditoria de qualidade aplicada à operação de um livreiro independente que vende exclusivamente na Estante Virtual e controla o estoque de forma manual, seja num caderno, seja numa lista simples. Esse é o perfil mais comum do livreiro na plataforma: muitos não têm sistema, e o controle do acervo fica no papel ou na memória.
+
+A tese: sem um controle de catálogo, a vitrine publicada deriva do estoque real e da política de preços. Ela anuncia livro que não existe, exibe preço que não é o planejado, omite avarias e conta estoque que não corresponde à prateleira. O resultado é venda de produto que o lojista não tem, perda de margem sem perceber e devolução por defeito que o comprador nunca foi avisado.
+
+A suíte de testes compara a vitrine publicada contra a **Lista do Livreiro** (a fonte da verdade do projeto) e demonstra com evidência material que esse controle é imprescindível para saber o que se tem, o que se lucra e o que se perde.
 
 ## 🎯 Modelo operacional
 
 **Escrita manual / verificação automatizada.**
 
-- Os cenários de teste — inclusive **erros propositais** que demonstram a tese —
-  são criados **manualmente** pelo analista nos canais.
-- O **Playwright atua como observador puro**: navega nas vitrines públicas como
-  um comprador, lê o estado visível dos anúncios (título, preço, contagem de
-  fotos, descrição, presença/ausência) e compara entre canais.
-- **Nenhum teste automatiza login, edição, pausa ou compra.**
-- O login do Mercado Livre exige verificação humana (código por e-mail/WhatsApp/
-  SMS, Face ID, QR code) — impraticável e proibida para automação. Por isso o ML
-  é usado **somente em leitura (vitrine pública)**.
+- Os cenários de teste, inclusive os erros propositais que demonstram a tese, são criados manualmente pelo analista
+- O Playwright atua como observador puro: navega na vitrine pública da Estante Virtual como um comprador, lê o estado visível dos anúncios (título, preço, contagem de fotos, descrição, presença ou ausência) e compara contra a Lista do Livreiro
+- Nenhum teste automatiza login, edição, pausa ou compra
 
-## 🧩 Escopo da suíte — 29 casos
+## 🔄 Alteração de escopo: registro de decisão
+
+O escopo original (v2.0) contemplava verificação em dois canais, Estante Virtual e Mercado Livre, sem sistema integrador. O piloto da suíte foi executado na Estante Virtual em 07/10/2026 com sucesso ([evidências do piloto](evidencias/2026-10-07/)).
+
+Na tentativa de replicar a verificação no Mercado Livre em 08/10/2026, a plataforma bloqueou a automação em camadas sucessivas:
+
+1. **Popup de frete/CEP** sobreposto à galeria de fotos, impedindo a interação com os anúncios
+2. **Overlay de onboarding** do próprio site, interceptando os cliques do script
+3. **reCAPTCHA do Google**, apresentado duas vezes seguidas na mesma sessão; ao resolver, a plataforma exigia ainda identificação de cliente novo ou antigo e login em conta
+4. **Muro de login** que impede a visualização de qualquer anúncio sem autenticação
+
+As evidências fotográficas e os logs do terminal estão versionados em [evidencias/2026-10-08/](evidencias/2026-10-08/), e o script da tentativa permanece no repositório como registro histórico, sem alteração ([test_tc18_fotos_ml.py](playwright/tests/test_tc18_fotos_ml.py)).
+
+Com a verificação automatizada inviabilizada empiricamente pela plataforma, o projeto ativou o cenário real do livreiro de canal único com controle manual de estoque, e o cross-channel passou a constar como **Fase 2 do roadmap**, condicionada à aprovação da API oficial do Mercado Livre.
+
+> O piloto da v2.0, o caso TC-18, corresponde ao TC-16 da v2.1. O registro permanece no histórico preservado, e o mesmo cenário foi renumerado no novo plano.
+
+## 🧪 Escopo da suíte — 23 casos (v2.1)
 
 | Frente | Foco | Casos | Status |
 |---|---|---|---|
-| **F1 — Sincronização de estoque** | Consistência cadastral e transacional entre canais; venda fantasma | TC-01 a TC-11 | Em execução |
-| **F2 — Precificação** | Régua R$ 19, break-even e margem por anúncio | TC-12 a TC-17 | Em execução |
-| **F3 — Fotos e avarias** | Padrão visual 2/4 fotos, dicionário de avarias, transparência | TC-18 a TC-26 | Em execução |
-| **API — Postman (ML)** | Comparação página vs API (preço, status, fotos) | TC-27 a TC-29 | ⚠️ Condicionado |
+| F1 — Conferência de estoque | Lista do livreiro × vitrine: existência, título, preço, descrição, fotos, estoque e venda fantasma | TC-01 a TC-09 | Em execução |
+| F2 — Precificação e lucro | Régua de R$ 19, saldo operacional e rentabilidade por anúncio | TC-10 a TC-15 | Em execução |
+| F3 — Fotos e avarias | Régua 2/4 fotos, dicionário de avarias e transparência visual | TC-16 a TC-23 | Em execução |
+| Fase 2 — API (Mercado Livre) | Comparação página vs API (preço, status, fotos) | TC-27 a TC-29 (v2.0) | ⚠️ Condicionada ao token da API oficial |
 
-> ⚠️ **Bloco API condicionado:** depende da aprovação de aplicação no portal de
-> desenvolvedores do Mercado Livre para obter o token de acesso. Se não liberado
-> em tempo hábil (corte: 12/10), os casos seguem como **Bloqueado por Ambiente**
-> e as requisições montadas no Postman ficam como evidência documental.
+**📚 Documentação:** [Documentação de Requisitos v2.1](docs/requisitos-v2.1.html) | [Plano de Testes v2.1](docs/plano-de-testes-v2.1.html)
 
-## 🛠 Stack
+## 🛠️ Stack
 
 | Ferramenta | Papel |
 |---|---|
-| **Python + Playwright** | Verificação automatizada de leitura nas vitrines (nenhuma escrita) |
-| **Google Sheets** | Consolidação financeira com fórmulas auditáveis (preço digita-se, líquido calcula-se) |
-| **Postman** | Requisições à API do ML — bloco condicionado ao token |
-| **Jira** | Registro formal de achados com evidência |
-| **GitHub** | Versionamento de scripts, docs e evidências |
+| Python + Playwright | Verificação automatizada de leitura na vitrine da EV (nenhuma escrita) |
+| Google Sheets | Consolidação financeira com fórmulas auditáveis |
+| Jira | Registro formal de achados com evidência |
+| GitHub | Versionamento de scripts, docs e evidências |
+| Postman | Requisições à API do ML (bloco condicionado, Fase 2) |
 
-## 📐 Regras de negócio (resumo)
+## 📋 Regras de negócio (resumo)
 
-- **Régua:** preço mínimo de venda **R$ 19** (política do dono)
-- **Break-even:** ~R$ 5 (EV) / ~R$ 9,50 (ML)
-- **Comissões:** EV 17% + mensalidade R$ 69/mês (faixa 501–2.000 livros) • ML Premium 16% + R$ 4 até R$ 79
+- **Preço mínimo de venda:** R$ 19,00 (política do dono); abaixo disso, o QA sinaliza divergência e o livreiro confirma se é promoção
+- **Saldo operacional:** (0,83 × preço) − R$ 4,00 (aquisição R$ 3,00 + embalagem R$ 1,00 + comissão EV de 17%); mensalidade de R$ 69,00 sem rateio unitário definido, portanto não é lucro líquido
+- **Break-even (custos variáveis):** ≈ R$ 4,82, abaixo do piso da massa de teste (R$ 7,00)
 - **Fotos:** 2 = bom estado • 4 = avaria evidenciada e descrita • 1 ou 3 = ERRO
-- **Dicionário de avarias:** rasgo, grifo, mancha, oxidação, lombada gasta, amarelado, rasura, sublinhação, marcação
+- **Dicionário de avarias:** rasgo, grifo, mancha, oxidação, lombada gasta, amarelado, rasura, sublinhação, marcação de texto
 
-Detalhes completos: [Documentação de Requisitos e RNs](https://brunnoc-04.github.io/projeto-pac-qa-sebo-auditoria/requisitos-rns.html) e [Plano de Testes v2.0](https://brunnoc-04.github.io/projeto-pac-qa-sebo-auditoria/plano-de-testes.html).
+## 🗂️ Estrutura do repositório
 
-## 📁 Estrutura
-
-```text
-├── docs/            # documentação v2.0 (requisitos, plano de testes)
-├── playwright/      # suíte de automação
-│   ├── data/        # massa de dados (L-01 a L-09, links das vitrines)
-│   ├── pages/       # page objects
-│   └── tests/       # casos de teste (TC-01 a TC-26)
-├── postman/         # bloco API condicionado (ver nota acima)
-├── sheets/          # referências da planilha de consolidação
-├── jira/            # índice dos reportes de achados
-└── evidencias/      # screenshots por ciclo: AAAA-MM-DD/TC-XX_L-YY_canal.png
+    docs/          → documentação v2.1 (requisitos, plano de testes)
+    playwright/    → suíte de automação (data, pages, tests)
+    postman/       → bloco API condicionado (Fase 2)
+    sheets/        → referências da planilha de consolidação
+    jira/          → índice dos reportes de achados
+    evidencias/    → screenshots por ciclo: AAAA-MM-DD/

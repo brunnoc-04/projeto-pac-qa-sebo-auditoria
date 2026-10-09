@@ -1,0 +1,1547 @@
+<!DOCTYPE html>
+<html lang="pt-BR" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Plano de Testes v2.1 — QA Estante Virtual</title>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/basecoat-css@1.0.2/dist/basecoat.cdn.min.css">
+  <style>
+/* Skip artifact shell — fixed styles served beside every artifact.
+   Complements basecoat; artifacts override --accent for their own identity. */
+:root {
+  color-scheme: light dark;
+  --accent: #2563eb;
+  --accent-contrast: #ffffff;
+  --accent-text: color-mix(in srgb, var(--accent) 72%, #000);
+  --bg: #f8f9fb;
+  --surface: #ffffff;
+  --text: #14171f;
+  --text-muted: #5b6472;
+  --border: rgba(20, 23, 31, 0.10);
+  --radius: 10px;
+  --shadow: 0 1px 3px rgba(20, 23, 31, 0.08);
+  --space: 16px;
+}
+/* Theme resolution. Without data-theme the viewer's system preference decides,
+   as it always did. With it, the artifact's own choice wins in BOTH directions:
+   a page that hardcodes one palette must not be handed the opposite set of
+   tokens by the machine it happens to be opened on. The dark values appear
+   twice because a media query cannot be folded into a selector list.
+   The attribute sits inside :where() so these blocks keep the specificity of a
+   bare :root — the page's own <style> is linked after this file and must go on
+   overriding any token it wants, exactly as it could before. */
+@media (prefers-color-scheme: dark) {
+  :root:where(:not([data-theme="light"])) {
+    --accent-text: color-mix(in srgb, var(--accent) 78%, #fff);
+    --bg: #101318;
+    --surface: #181c23;
+    --text: #eef1f6;
+    --text-muted: #9aa4b2;
+    --border: rgba(238, 241, 246, 0.12);
+    --shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
+  }
+}
+:root:where([data-theme="dark"]) {
+  color-scheme: dark;
+  --accent-text: color-mix(in srgb, var(--accent) 78%, #fff);
+  --bg: #101318;
+  --surface: #181c23;
+  --text: #eef1f6;
+  --text-muted: #9aa4b2;
+  --border: rgba(238, 241, 246, 0.12);
+  --shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
+}
+:root:where([data-theme="light"]) { color-scheme: light; }
+* { box-sizing: border-box; }
+html, body { margin: 0; padding: 0; }
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  line-height: 1.55;
+  -webkit-font-smoothing: antialiased;
+}
+img { max-width: 100%; display: block; }
+
+.shell-container { max-width: 1100px; margin: 0 auto; padding: 0 20px; }
+.shell-section { padding: calc(var(--space) * 2) 0; }
+.shell-grid { display: grid; gap: var(--space); grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); }
+.shell-toolbar { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin-bottom: var(--space); }
+.shell-footer { padding: 24px 0 40px; color: var(--text-muted); font-size: 13px; }
+
+.shell-hero { padding: calc(var(--space) * 3) 0 calc(var(--space) * 2); }
+.shell-hero h1 { font-size: clamp(26px, 4vw, 40px); line-height: 1.15; margin: 0 0 10px; text-wrap: balance; }
+.shell-hero p { color: var(--text-muted); max-width: 60ch; margin: 0; }
+
+.panel {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: var(--space);
+}
+
+.kpi { display: flex; flex-direction: column; gap: 4px; }
+.kpi .kpi-value { font-size: 28px; font-weight: 650; line-height: 1.1; }
+.kpi .kpi-label { font-size: 13px; color: var(--text-muted); }
+.kpi .kpi-delta { font-size: 12.5px; font-weight: 600; }
+.kpi .kpi-delta.up { color: #0a8f3c; }
+.kpi .kpi-delta.down { color: #cf3131; }
+
+table.shell-table { border-collapse: collapse; width: 100%; font-size: 14px; }
+table.shell-table th {
+  text-align: left; font-size: 11.5px; letter-spacing: 0.05em; text-transform: uppercase;
+  color: var(--text-muted); font-weight: 600;
+}
+table.shell-table th, table.shell-table td { padding: 9px 12px 9px 0; border-bottom: 1px solid var(--border); }
+table.shell-table td.num, table.shell-table th.num { text-align: right; font-variant-numeric: tabular-nums; }
+table.shell-table tbody tr:hover { background: color-mix(in srgb, var(--accent) 6%, transparent); }
+
+.chart-box { width: 100%; min-height: 220px; }
+.chart-box svg { width: 100%; height: auto; display: block; }
+
+.muted { color: var(--text-muted); }
+.accent { color: var(--accent-text); }
+.shell-badge {
+  display: inline-flex; align-items: center; gap: 6px;
+  font-size: 12px; font-weight: 600; padding: 3px 10px; border-radius: 999px;
+  background: color-mix(in srgb, var(--accent) 12%, transparent); color: var(--accent-text);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .shell-fade { animation: shell-fade 400ms ease both; }
+  @keyframes shell-fade { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+}
+
+</style>
+  
+  <style>
+    :root {
+      --accent: #06b6d4;
+      --bg: #0b0f17;
+      --surface: #111827;
+      --surface-alt: #172133;
+      --border: #1f293d;
+      --border-focus: #0ea5e9;
+      --text: #f1f5f9;
+      --text-muted: #94a3b8;
+      --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    }
+
+    body {
+      font-family: var(--font-sans);
+      background-color: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+      margin: 0;
+      padding: 0;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* Top Navigation bar */
+    .top-bar {
+      border-bottom: 1px solid var(--border);
+      background: rgba(17, 24, 39, 0.85);
+      backdrop-filter: blur(8px);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+
+    .top-bar-inner {
+      max-width: 1280px;
+      margin: 0 auto;
+      padding: 12px 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+    }
+
+    .brand-meta {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-size: 0.875rem;
+    }
+
+    .doc-pill {
+      background: rgba(6, 182, 212, 0.15);
+      color: #38bdf8;
+      border: 1px solid rgba(6, 182, 212, 0.35);
+      padding: 3px 10px;
+      border-radius: 999px;
+      font-weight: 600;
+      font-size: 0.75rem;
+      letter-spacing: 0.03em;
+    }
+
+    .nav-actions {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .btn-action {
+      background: var(--surface-alt);
+      color: #e2e8f0;
+      border: 1px solid var(--border);
+      padding: 8px 16px;
+      border-radius: 6px;
+      font-size: 0.825rem;
+      font-weight: 600;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      text-decoration: none;
+      transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+    }
+
+    .btn-action:hover {
+      background: #1e293b;
+      border-color: #38bdf8;
+      color: #38bdf8;
+    }
+
+    .btn-primary-action {
+      background: #0284c7;
+      color: #ffffff;
+      border: 1px solid #0284c7;
+    }
+
+    .btn-primary-action:hover {
+      background: #0369a1;
+      border-color: #0369a1;
+      color: #ffffff;
+    }
+
+    /* Container */
+    .doc-container {
+      max-width: 1280px;
+      margin: 0 auto;
+      padding: 28px 20px 80px 20px;
+    }
+
+    /* Hero header */
+    .hero-header {
+      margin-bottom: 28px;
+      padding-bottom: 24px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .hero-title {
+      font-size: 1.85rem;
+      font-weight: 700;
+      color: #f8fafc;
+      margin: 0 0 10px 0;
+      letter-spacing: -0.02em;
+      line-height: 1.25;
+    }
+
+    .hero-subtitle {
+      font-size: 0.95rem;
+      color: var(--text-muted);
+      margin: 0;
+      line-height: 1.5;
+    }
+
+    /* Summary Bar */
+    .toc-bar {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 12px 18px;
+      margin-bottom: 28px;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 12px;
+      font-size: 0.825rem;
+    }
+
+    .toc-title {
+      font-weight: 600;
+      color: #94a3b8;
+      margin-right: 4px;
+    }
+
+    .toc-links {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    .toc-links a {
+      color: #38bdf8;
+      text-decoration: none;
+      padding: 4px 8px;
+      border-radius: 4px;
+      background: rgba(14, 165, 233, 0.08);
+      transition: background 0.15s ease;
+    }
+
+    .toc-links a:hover {
+      background: rgba(14, 165, 233, 0.2);
+    }
+
+    /* Metrics Grid */
+    .metrics-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 16px;
+      margin-bottom: 32px;
+    }
+
+    .metric-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 18px 20px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .metric-card::before {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 4px;
+      height: 100%;
+      background: #0ea5e9;
+    }
+
+    .metric-card.suite::before { background: #38bdf8; }
+    .metric-card.f1::before { background: #06b6d4; }
+    .metric-card.f2::before { background: #10b981; }
+    .metric-card.f3::before { background: #8b5cf6; }
+
+    .metric-title {
+      font-size: 0.8rem;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--text-muted);
+      font-weight: 600;
+      margin-bottom: 8px;
+    }
+
+    .metric-number {
+      font-size: 1.75rem;
+      font-weight: 700;
+      color: #ffffff;
+      line-height: 1.1;
+      margin-bottom: 6px;
+    }
+
+    .metric-desc {
+      font-size: 0.825rem;
+      color: #94a3b8;
+      line-height: 1.4;
+      margin: 0;
+    }
+
+    /* Informational Panels */
+    .section-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 22px 24px;
+      margin-bottom: 24px;
+    }
+
+    .section-card.pilot-highlight {
+      border-color: rgba(6, 182, 212, 0.4);
+      background: linear-gradient(180deg, #132238 0%, #111827 100%);
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
+    }
+
+    .section-card-title {
+      font-size: 1.1rem;
+      font-weight: 600;
+      color: #ffffff;
+      margin: 0 0 12px 0;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .section-card-title .tag {
+      font-size: 0.725rem;
+      padding: 2px 8px;
+      border-radius: 4px;
+      background: rgba(14, 165, 233, 0.2);
+      color: #38bdf8;
+      font-weight: 600;
+      text-transform: uppercase;
+    }
+
+    .section-card p {
+      margin: 0 0 12px 0;
+      font-size: 0.9rem;
+      color: #cbd5e1;
+      line-height: 1.6;
+    }
+
+    .section-card p:last-child {
+      margin-bottom: 0;
+    }
+
+    /* Tool Chips */
+    .tool-chips-bar {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 24px;
+      background: var(--surface-alt);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 12px 18px;
+    }
+
+    .tool-chips-title {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-right: 4px;
+    }
+
+    .tool-chip {
+      background: #0f172a;
+      border: 1px solid #334155;
+      color: #e2e8f0;
+      font-size: 0.8rem;
+      padding: 5px 12px;
+      border-radius: 6px;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-weight: 500;
+    }
+
+    .tool-chip strong {
+      color: #38bdf8;
+    }
+
+    /* Governance 3 Grid */
+    .gov-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 16px;
+      margin-bottom: 32px;
+    }
+
+    .gov-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 18px 20px;
+    }
+
+    .gov-title {
+      font-size: 0.95rem;
+      font-weight: 600;
+      color: #e2e8f0;
+      margin: 0 0 8px 0;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .gov-title::before {
+      content: "";
+      display: inline-block;
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #38bdf8;
+    }
+
+    .gov-desc {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      margin: 0;
+      line-height: 1.5;
+    }
+
+    /* Front Header */
+    .front-section {
+      margin-bottom: 40px;
+    }
+
+    .front-header {
+      background: var(--surface-alt);
+      border: 1px solid var(--border);
+      border-left: 4px solid var(--accent);
+      border-radius: 8px 8px 0 0;
+      padding: 16px 20px;
+    }
+
+    .front-header-title {
+      font-size: 1.15rem;
+      font-weight: 700;
+      color: #ffffff;
+      margin: 0 0 6px 0;
+    }
+
+    .front-header-subtitle {
+      font-size: 0.85rem;
+      color: #cbd5e1;
+      margin: 0;
+      line-height: 1.5;
+    }
+
+    /* Tables */
+    .table-responsive {
+      overflow-x: auto;
+      border: 1px solid var(--border);
+      border-top: none;
+      border-radius: 0 0 8px 8px;
+      background: var(--surface);
+    }
+
+    .qa-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.825rem;
+      text-align: left;
+      min-width: 980px;
+    }
+
+    .qa-table th {
+      background: #0f172a;
+      color: #94a3b8;
+      font-weight: 600;
+      text-transform: uppercase;
+      font-size: 0.725rem;
+      letter-spacing: 0.05em;
+      padding: 12px 14px;
+      border-bottom: 1px solid var(--border);
+      white-space: nowrap;
+    }
+
+    .qa-table td {
+      padding: 12px 14px;
+      border-bottom: 1px solid var(--border);
+      color: #cbd5e1;
+      vertical-align: top;
+      line-height: 1.5;
+    }
+
+    .qa-table tbody tr:nth-child(even) {
+      background: rgba(23, 33, 51, 0.4);
+    }
+
+    .qa-table tbody tr:hover {
+      background: rgba(14, 165, 233, 0.05);
+    }
+
+    .qa-table td.col-id {
+      font-weight: 700;
+      color: #38bdf8;
+      white-space: nowrap;
+      font-family: monospace;
+      font-size: 0.85rem;
+    }
+
+    .qa-table td.col-title {
+      font-weight: 600;
+      color: #f1f5f9;
+      min-width: 160px;
+    }
+
+    .qa-table td.col-tech,
+    .qa-table td.col-tool {
+      font-size: 0.775rem;
+      color: #94a3b8;
+      white-space: nowrap;
+    }
+
+    /* Badges */
+    .badge-tc {
+      display: inline-block;
+      font-size: 0.7rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.03em;
+      padding: 3px 8px;
+      border-radius: 4px;
+      white-space: nowrap;
+      border: 1px solid transparent;
+    }
+
+    .badge-auto {
+      background: rgba(6, 182, 212, 0.15);
+      color: #38bdf8;
+      border-color: rgba(6, 182, 212, 0.35);
+    }
+
+    .badge-manual {
+      background: rgba(249, 115, 22, 0.15);
+      color: #fb923c;
+      border-color: rgba(249, 115, 22, 0.35);
+    }
+
+    .badge-semiauto {
+      background: rgba(139, 92, 246, 0.15);
+      color: #c084fc;
+      border-color: rgba(139, 92, 246, 0.35);
+    }
+
+    .badge-sheet {
+      background: rgba(16, 185, 129, 0.15);
+      color: #34d399;
+      border-color: rgba(16, 185, 129, 0.35);
+    }
+
+    .badge-visual {
+      background: rgba(234, 179, 8, 0.15);
+      color: #facc15;
+      border-color: rgba(234, 179, 8, 0.35);
+    }
+
+    .badge-critical {
+      background: rgba(239, 68, 68, 0.2);
+      color: #f87171;
+      border: 1px solid rgba(239, 68, 68, 0.4);
+      font-size: 0.675rem;
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-weight: 700;
+      margin-left: 6px;
+      display: inline-block;
+      vertical-align: middle;
+    }
+
+    .badge-status {
+      display: inline-block;
+      font-size: 0.725rem;
+      padding: 3px 8px;
+      border-radius: 4px;
+      white-space: nowrap;
+      font-weight: 500;
+    }
+
+    .status-pending {
+      background: rgba(148, 163, 184, 0.1);
+      color: #94a3b8;
+      border: 1px solid rgba(148, 163, 184, 0.2);
+    }
+
+    .status-done {
+      background: rgba(16, 185, 129, 0.15);
+      color: #34d399;
+      border: 1px solid rgba(16, 185, 129, 0.35);
+    }
+
+    /* Traceability Table */
+    .trace-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 22px 24px;
+      margin-bottom: 32px;
+    }
+
+    .trace-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.825rem;
+      margin-top: 14px;
+    }
+
+    .trace-table th {
+      background: #0f172a;
+      color: #94a3b8;
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      padding: 10px 14px;
+      border: 1px solid var(--border);
+      text-align: left;
+    }
+
+    .trace-table td {
+      padding: 9px 14px;
+      border: 1px solid var(--border);
+      color: #cbd5e1;
+      font-size: 0.825rem;
+    }
+
+    .trace-table tr:nth-child(even) td {
+      background: rgba(23, 33, 51, 0.3);
+    }
+
+    /* Pending points list */
+    .pending-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 22px 24px;
+      margin-bottom: 32px;
+    }
+
+    .pending-list {
+      margin: 14px 0 0 0;
+      padding-left: 20px;
+      color: #cbd5e1;
+      font-size: 0.875rem;
+    }
+
+    .pending-list li {
+      margin-bottom: 10px;
+      line-height: 1.5;
+    }
+
+    .pending-list li:last-child {
+      margin-bottom: 0;
+    }
+
+    /* Footer */
+    .page-footer {
+      border-top: 1px solid var(--border);
+      padding: 28px 0;
+      font-size: 0.825rem;
+      color: var(--text-muted);
+      line-height: 1.6;
+    }
+
+    /* Print styles */
+    @media print {
+      body {
+        background: #ffffff !important;
+        color: #000000 !important;
+        font-size: 10pt;
+      }
+
+      .top-bar,
+      .toc-bar,
+      .btn-action,
+      .btn-primary-action {
+        display: none !important;
+      }
+
+      .doc-container {
+        padding: 0 !important;
+        max-width: 100% !important;
+      }
+
+      .hero-title {
+        color: #000000 !important;
+        font-size: 16pt;
+      }
+
+      .hero-subtitle {
+        color: #333333 !important;
+      }
+
+      .metric-card,
+      .section-card,
+      .gov-card,
+      .trace-card,
+      .pending-card,
+      .front-header,
+      .table-responsive {
+        background: #ffffff !important;
+        border: 1px solid #cccccc !important;
+        color: #000000 !important;
+        box-shadow: none !important;
+        page-break-inside: avoid;
+      }
+
+      .qa-table th,
+      .trace-table th {
+        background: #f0f0f0 !important;
+        color: #000000 !important;
+        border: 1px solid #cccccc !important;
+      }
+
+      .qa-table td,
+      .trace-table td {
+        color: #000000 !important;
+        border: 1px solid #cccccc !important;
+      }
+
+      .qa-table tbody tr:nth-child(even),
+      .trace-table tr:nth-child(even) td {
+        background: #fbfbfb !important;
+      }
+
+      .badge-tc,
+      .badge-status,
+      .badge-critical {
+        border: 1px solid #666666 !important;
+        color: #000000 !important;
+        background: #eeeeee !important;
+      }
+
+      .page-footer {
+        border-top: 1px solid #cccccc !important;
+        color: #555555 !important;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Top bar -->
+  <header class="top-bar">
+    <div class="top-bar-inner">
+      <div class="brand-meta">
+        <span class="doc-pill">PAC TRYPLETEN</span>
+        <span style="font-weight: 600; color: #f8fafc;">Plano de Testes v2.1</span>
+        <span style="color: var(--text-muted); font-size: 0.8rem;">Estante Virtual</span>
+      </div>
+      <div class="nav-actions">
+        <button class="btn-action btn-primary-action" onclick="window.print()">
+          Imprimir / Salvar em PDF
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <main class="doc-container">
+
+    <!-- Hero Title -->
+    <header class="hero-header">
+      <h1 class="hero-title">Plano de Testes v2.1: Auditoria de QA para Sebo em Marketplace</h1>
+      <p class="hero-subtitle">
+        Projeto PAC: TripleTen Brasil. Autor: Brunno Cesar, Analista de QA. Estante Virtual: conferência de estoque, precificação e transparência visual. Versão 2.1, outubro/2026. Documento par da Documentação de Requisitos v2.1.
+      </p>
+    </header>
+
+    <!-- Table of Contents Anchor Bar -->
+    <nav class="toc-bar" aria-label="Sumário da documentação">
+      <span class="toc-title">Sumário:</span>
+      <div class="toc-links">
+        <a href="#modelo-operacional">Modelo Operacional</a>
+        <a href="#piloto">Registro do Piloto</a>
+        <a href="#governanca">Governança</a>
+        <a href="#frente-1">Frente 1 (Estoque)</a>
+        <a href="#frente-2">Frente 2 (Precificação)</a>
+        <a href="#frente-3">Frente 3 (Fotos e Avarias)</a>
+        <a href="#rastreabilidade">Rastreabilidade v2.0 para v2.1</a>
+        <a href="#pendencias">Pendências do Negócio</a>
+      </div>
+    </nav>
+
+    <!-- Metrics Cards Grid -->
+    <section class="metrics-grid" aria-label="Métricas da suíte de testes">
+      <div class="metric-card suite">
+        <div class="metric-title">Total da Suíte</div>
+        <div class="metric-number">23 casos</div>
+        <p class="metric-desc">100% mapeados com critérios objetivos, técnicas formais e rastreabilidade.</p>
+      </div>
+
+      <div class="metric-card f1">
+        <div class="metric-title">Frente 1: Estoque</div>
+        <div class="metric-number">9 casos</div>
+        <p class="metric-desc">Lista do livreiro versus vitrine pública (TC-01 a TC-09). Integridade e contagem.</p>
+      </div>
+
+      <div class="metric-card f2">
+        <div class="metric-title">Frente 2: Precificação</div>
+        <div class="metric-number">6 casos</div>
+        <p class="metric-desc">Régua normativa de R$ 19,00 e saldo operacional (TC-10 a TC-15).</p>
+      </div>
+
+      <div class="metric-card f3">
+        <div class="metric-title">Frente 3: Transparência</div>
+        <div class="metric-number">8 casos</div>
+        <p class="metric-desc">Régua 2/4 fotos e descrição fiel das avarias físicas (TC-16 a TC-23).</p>
+      </div>
+    </section>
+
+    <!-- Operational Model Card -->
+    <section id="modelo-operacional" class="section-card">
+      <h2 class="section-card-title">
+        Modelo Operacional: Escrita Manual e Verificação Automatizada
+      </h2>
+      <p>
+        Este plano opera no modelo <strong>ESCRITA MANUAL / VERIFICAÇÃO AUTOMATIZADA</strong>. O analista cria todos os cenários manualmente, inclusive os erros propositais que demonstram a tese do projeto (a vitrine deriva do estoque real e da política de preços quando o livreiro não tem controle de catálogo).
+      </p>
+      <p>
+        O Playwright atua como observador puro: navega na vitrine pública da Estante Virtual como um comprador, lê o estado visível dos anúncios (título, preço, contagem de fotos, descrição, presença ou ausência) e compara contra a Lista do Livreiro, a fonte da verdade. Nenhum teste automatiza edição, pausa, venda ou login.
+      </p>
+      <p>
+        Cada teste carrega um badge de execução correspondente:
+        <span class="badge-tc badge-auto">AUTOMATIZADO</span> (o script Playwright verifica a vitrine pública),
+        <span class="badge-tc badge-manual">CENÁRIO MANUAL</span> (o analista prepara o estado manualmente antes da verificação),
+        <span class="badge-tc badge-semiauto">SEMIAUTOMATIZADO</span> (parte automatizada em busca de termo e contagem com julgamento humano),
+        <span class="badge-tc badge-sheet">PLANILHA</span> (cálculo executado no Google Sheets com fórmulas auditáveis), e
+        <span class="badge-tc badge-visual">VERIFICAÇÃO VISUAL</span> (inspeção humana direta do anúncio).
+      </p>
+    </section>
+
+    <!-- Pilot Register Highlight Card -->
+    <section id="piloto" class="section-card pilot-highlight">
+      <h2 class="section-card-title">
+        Registro do Piloto Executado e Reescopo
+        <span class="tag">Histórico Oficial</span>
+      </h2>
+      <p>
+        O piloto da suíte (TC-18 da versão 2.0) foi executado na Estante Virtual em <strong>07/10/2026</strong> com sucesso: dois títulos validados na régua de fotos com evidências versionadas.
+      </p>
+      <p>
+        Na tentativa de replicar a automação no Mercado Livre em <strong>08/10/2026</strong>, a plataforma bloqueou a automação em camadas sucessivas (popup de frete, overlay de onboarding, reCAPTCHA duplo e muro de login impeditivo).
+      </p>
+      <p>
+        Com o reescopo técnico para canal único, o piloto foi renumerado: o <strong>TC-18 (v2.0)</strong> corresponde agora ao <strong>TC-16 (v2.1)</strong>. O script e as evidências originais permanecem no repositório como registro histórico, inalterados. Evidências versionadas: <code>evidencias/2026-10-07/</code> (Estante Virtual) e <code>evidencias/2026-10-08/</code> (bloqueio Mercado Livre).
+      </p>
+    </section>
+
+    <!-- Seed Injected Errors Card -->
+    <section class="section-card">
+      <h2 class="section-card-title">Registro de Erros Propositais da Massa de Testes</h2>
+      <p>
+        A Lista do Livreiro (composta por 21 títulos, detalhada na Documentação de Requisitos v2.1) já embute os erros propositais planejados para validar a sensibilidade da suíte. O Livro 21 consta na lista e nunca é cadastrado na Estante Virtual (anúncio faltante), o Livro 8 possui 3 unidades físicas e apenas 1 na Estante Virtual, o Livro 9 apresenta estoque zero com anúncio que deve estar desativado, e a Frente 3 possui títulos propositalmente preparados com 1 foto, 3 fotos, avaria não descrita, omissão parcial de defeitos e fotos pertencentes a outro exemplar.
+      </p>
+    </section>
+
+    <!-- Tool Chips Bar -->
+    <section class="tool-chips-bar" aria-label="Ferramentas utilizadas">
+      <span class="tool-chips-title">Ferramentas da Suíte:</span>
+      <span class="tool-chip"><strong>Playwright</strong> (leitura E2E)</span>
+      <span class="tool-chip"><strong>Google Sheets</strong> (cálculos)</span>
+      <span class="tool-chip"><strong>Jira</strong> (achados e bugs)</span>
+      <span class="tool-chip"><strong>GitHub</strong> (versionamento)</span>
+    </section>
+
+    <!-- Governance 3 Cards -->
+    <section id="governanca" class="gov-grid" aria-label="Regras de Governança">
+      <div class="gov-card">
+        <h3 class="gov-title">Rastreabilidade</h3>
+        <p class="gov-desc">
+          Todo achado classificado como falho abre item no Jira com evidência em screenshot, severidade técnica e link direto do anúncio auditado.
+        </p>
+      </div>
+
+      <div class="gov-card">
+        <h3 class="gov-title">Auditoria Financeira</h3>
+        <p class="gov-desc">
+          Todo cálculo financeiro fica registrado no Google Sheets com fórmula explícita visível (saldo operacional = (0,83 x preço) - 4,00), sem valores inseridos de forma direta no código.
+        </p>
+      </div>
+
+      <div class="gov-card">
+        <h3 class="gov-title">Versionamento</h3>
+        <p class="gov-desc">
+          Todo script de teste e pacote de evidências é comitado no repositório GitHub utilizando mensagens de commit semântico padronizadas.
+        </p>
+      </div>
+    </section>
+
+    <!-- FRENTE 1 -->
+    <section id="frente-1" class="front-section">
+      <div class="front-header">
+        <h2 class="front-header-title">Frente 1: Conferência de Estoque (TC-01 a TC-09)</h2>
+        <p class="front-header-subtitle">
+          <strong>Objetivo:</strong> Validar se a vitrine publicada reflete a Lista do Livreiro (fonte da verdade) em existência, título, preço, descrição, fotos, estoque por título e total de exemplares.<br>
+          <strong>Massa:</strong> Livros 1, 2, 5, 6, 8, 9, 21 e massa global (1 a 20).
+        </p>
+      </div>
+
+      <div class="table-responsive">
+        <table class="qa-table">
+          <thead>
+            <tr>
+              <th style="width: 70px;">ID</th>
+              <th style="width: 170px;">Teste</th>
+              <th>O que faremos</th>
+              <th>Resultado esperado</th>
+              <th style="width: 120px;">Ferramenta</th>
+              <th style="width: 150px;">Técnica</th>
+              <th style="width: 130px;">Badge</th>
+              <th style="width: 90px;">Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="col-id">TC-01</td>
+              <td class="col-title">Conferência de existência do livro</td>
+              <td>Localizamos o Livro 1 na vitrine da EV pelo ISBN e pelo título exato, comparando contra a lista</td>
+              <td>O registro é localizado com sucesso</td>
+              <td class="col-tool">Playwright</td>
+              <td class="col-tech">Busca em vitrine pública</td>
+              <td><span class="badge-tc badge-manual">CENÁRIO MANUAL</span></td>
+              <td><span class="badge-status status-pending">Pendente</span></td>
+            </tr>
+            <tr>
+              <td class="col-id">TC-02</td>
+              <td class="col-title">Consistência de título</td>
+              <td>Comparamos caractere a caractere o título do Livro 5 na vitrine com o título da lista</td>
+              <td>O título "Hábitos Atômicos na Prática Nuclear" coincide estritamente</td>
+              <td class="col-tool">Playwright</td>
+              <td class="col-tech">Comparação de dados</td>
+              <td><span class="badge-tc badge-auto">AUTOMATIZADO</span></td>
+              <td><span class="badge-status status-pending">Pendente</span></td>
+            </tr>
+            <tr>
+              <td class="col-id">TC-03</td>
+              <td class="col-title">Consistência de preço</td>
+              <td>Comparamos o preço do Livro 6 na vitrine com o valor da lista (R$ 19,00)</td>
+              <td>A vitrine exibe exatamente R$ 19,00</td>
+              <td class="col-tool">Playwright</td>
+              <td class="col-tech">Comparação de dados</td>
+              <td><span class="badge-tc badge-auto">AUTOMATIZADO</span></td>
+              <td><span class="badge-status status-pending">Pendente</span></td>
+            </tr>
+            <tr>
+              <td class="col-id">TC-04</td>
+              <td class="col-title">Descrição sem avarias falsas</td>
+              <td>O anúncio do Livro 1 contém deliberadamente a palavra "rasgado", mas o exemplar físico é íntegro; verificamos a descrição</td>
+              <td>O QA identifica a avaria inexistente e reprova o anúncio</td>
+              <td class="col-tool">Playwright + julgamento humano</td>
+              <td class="col-tech">Leitura de texto + dicionário</td>
+              <td><span class="badge-tc badge-semiauto">SEMIAUTOMATIZADO</span></td>
+              <td><span class="badge-status status-pending">Pendente</span></td>
+            </tr>
+            <tr>
+              <td class="col-id">TC-05</td>
+              <td class="col-title">Volumetria de fotos por estado</td>
+              <td>Livro 1 (bom estado) deve ter 2 fotos; Livro 2 (rasgo e manchas amareladas) deve ter 4 fotos que documentem as avarias</td>
+              <td>Ambos conformes com a régua 2/4 fotos</td>
+              <td class="col-tool">Playwright</td>
+              <td class="col-tech">Contagem de elementos</td>
+              <td><span class="badge-tc badge-auto">AUTOMATIZADO</span></td>
+              <td><span class="badge-status status-pending">Pendente</span></td>
+            </tr>
+            <tr>
+              <td class="col-id">TC-06</td>
+              <td class="col-title">Estoque por título</td>
+              <td>O Livro 8 tem 3 unidades físicas na lista e apenas 1 cadastrada na EV; conferimos o saldo</td>
+              <td>A auditoria aponta divergência de 2 unidades faltantes no ambiente digital</td>
+              <td class="col-tool">Playwright + Sheets</td>
+              <td class="col-tech">Inventário cruzado</td>
+              <td><span class="badge-tc badge-manual">CENÁRIO MANUAL</span></td>
+              <td><span class="badge-status status-pending">Pendente</span></td>
+            </tr>
+            <tr>
+              <td class="col-id">TC-07</td>
+              <td class="col-title">
+                Anúncio ativo sem estoque (venda fantasma)
+                <span class="badge-critical">CRÍTICO</span>
+              </td>
+              <td>O Livro 9 tem estoque zero na EV; verificamos se o anúncio permanece comprável na vitrine</td>
+              <td>O anúncio deve constar como indisponível, esgotado ou oculto; permanecer ativo é falha crítica</td>
+              <td class="col-tool">Playwright</td>
+              <td class="col-tech">Verificação de estado do anúncio</td>
+              <td><span class="badge-tc badge-manual">CENÁRIO MANUAL</span></td>
+              <td><span class="badge-status status-pending">Pendente</span></td>
+            </tr>
+            <tr>
+              <td class="col-id">TC-08</td>
+              <td class="col-title">Quantidade total de exemplares</td>
+              <td>Contamos os exemplares (não títulos) dos Livros 1 a 20: 22 unidades físicas na lista contra 19 ativas na EV</td>
+              <td>A diferença global identificada é exatamente 3 unidades (2 do Livro 8 e 1 do Livro 9); comparar títulos (20 versus 19) é erro metodológico</td>
+              <td class="col-tool">Playwright + Sheets</td>
+              <td class="col-tech">Auditoria de catálogo</td>
+              <td><span class="badge-tc badge-manual">CENÁRIO MANUAL</span></td>
+              <td><span class="badge-status status-pending">Pendente</span></td>
+            </tr>
+            <tr>
+              <td class="col-id">TC-09</td>
+              <td class="col-title">Anúncio faltante (lista com item não cadastrado)</td>
+              <td>O Livro 21 consta na lista do livreiro e nunca é cadastrado na EV; procuramos o título na vitrine</td>
+              <td>O QA registra a divergência: livro da lista ausente na vitrine, demonstrando a tese do projeto (anúncio faltante)</td>
+              <td class="col-tool">Playwright</td>
+              <td class="col-tech">Busca em vitrine pública (caminho vazio esperado)</td>
+              <td><span class="badge-tc badge-manual">CENÁRIO MANUAL</span></td>
+              <td><span class="badge-status status-pending">Pendente</span></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- FRENTE 2 -->
+    <section id="frente-2" class="front-section">
+      <div class="front-header">
+        <h2 class="front-header-title">Frente 2: Precificação e Lucro (TC-10 a TC-15)</h2>
+        <p class="front-header-subtitle">
+          <strong>Régua do auditor:</strong> Preço mínimo de R$ 19,00 (política do livreiro) e piso da massa de R$ 7,00.<br>
+          <strong>Base de custos:</strong> Aquisição R$ 3,00, embalagem R$ 1,00, comissão EV de 17%.<br>
+          <strong>Fórmula:</strong> Saldo operacional = (0,83 x preço) - 4,00. O resultado é saldo operacional antes de custos fixos (mensalidade de R$ 69,00 e deslocamento sem rateio definido), não lucro líquido.<br>
+          <strong>Massa:</strong> Os 21 títulos da lista; no TC-15, os 20 títulos que possuem anúncio publicado.
+        </p>
+      </div>
+
+      <div class="table-responsive">
+        <table class="qa-table">
+          <thead>
+            <tr>
+              <th style="width: 70px;">ID</th>
+              <th style="width: 170px;">Teste</th>
+              <th>O que faremos</th>
+              <th>Resultado esperado</th>
+              <th style="width: 120px;">Ferramenta</th>
+              <th style="width: 150px;">Técnica</th>
+              <th style="width: 130px;">Badge</th>
+              <th style="width: 90px;">Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="col-id">TC-10</td>
+              <td class="col-title">Quantidade de livros a R$ 19,00 ou mais</td>
+              <td>Aplicamos o filtro preço maior ou igual a R$ 19,00 na massa (Livros 1, 5, 6, 9, 10, 12, 15, 16, 18, 20 e 21)</td>
+              <td>Exatamente 11 títulos retornam no relatório</td>
+              <td class="col-tool">Sheets</td>
+              <td class="col-tech">Classes de equivalência</td>
+              <td><span class="badge-tc badge-sheet">PLANILHA</span></td>
+              <td><span class="badge-status status-pending">Pendente</span></td>
+            </tr>
+            <tr>
+              <td class="col-id">TC-11</td>
+              <td class="col-title">Livros de R$ 15,00 a R$ 18,99</td>
+              <td>Filtramos a subfaixa intermediária (Livros 2 com R$ 18,99, 7 com R$ 15,00, 11 com R$ 18,00, 17 com R$ 17,50)</td>
+              <td>Exatamente 4 títulos, todos sinalizados como divergentes do mínimo comercial estipulado</td>
+              <td class="col-tool">Sheets</td>
+              <td class="col-tech">Classes de equivalência</td>
+              <td><span class="badge-tc badge-sheet">PLANILHA</span></td>
+              <td><span class="badge-status status-pending">Pendente</span></td>
+            </tr>
+            <tr>
+              <td class="col-id">TC-12</td>
+              <td class="col-title">Livros abaixo de R$ 15,00</td>
+              <td>Filtramos a faixa R$ 7,00 a R$ 14,99 em duas subfaixas (R$ 12,00 a R$ 14,99: Livros 3, 8, 13, 19; R$ 7,00 a R$ 11,99: Livros 4 e 14)</td>
+              <td>Exatamente 6 títulos segmentados nas subfaixas, todos sinalizados como violação do mínimo, e nenhum abaixo do piso de R$ 7,00</td>
+              <td class="col-tool">Sheets</td>
+              <td class="col-tech">Classes de equivalência + valor limite</td>
+              <td><span class="badge-tc badge-sheet">PLANILHA</span></td>
+              <td><span class="badge-status status-pending">Pendente</span></td>
+            </tr>
+            <tr>
+              <td class="col-id">TC-13</td>
+              <td class="col-title">Rentabilidade acima de R$ 30,00</td>
+              <td>Contabilizamos os títulos acima de R$ 30,00 (Livros 5, 9, 12 e 18) e apuramos os saldos individuais</td>
+              <td>Exatamente 4 títulos identificados; saldos apurados de R$ 21,73 (Livro 5), R$ 25,05 (Livro 9), R$ 33,35 (Livro 12) e R$ 22,56 (Livro 18)</td>
+              <td class="col-tool">Sheets</td>
+              <td class="col-tech">Valor limite + cálculo</td>
+              <td><span class="badge-tc badge-sheet">PLANILHA</span></td>
+              <td><span class="badge-status status-pending">Pendente</span></td>
+            </tr>
+            <tr>
+              <td class="col-id">TC-14</td>
+              <td class="col-title">Cálculo no preço mínimo de R$ 19,00</td>
+              <td>Decompomos a venda do Livro 1 pelo preço normativo: taxa R$ 3,23, embalagem R$ 1,00, aquisição R$ 3,00</td>
+              <td>Saldo de R$ 11,77 apurado, superior à meta operacional de R$ 10,00, com ressalva formal de custos fixos não rateados</td>
+              <td class="col-tool">Sheets</td>
+              <td class="col-tech">Valor limite</td>
+              <td><span class="badge-tc badge-sheet">PLANILHA</span></td>
+              <td><span class="badge-status status-pending">Pendente</span></td>
+            </tr>
+            <tr>
+              <td class="col-id">TC-15</td>
+              <td class="col-title">Classificação individual de saldo</td>
+              <td>Aplicamos a fórmula a cada um dos 20 títulos com anúncio e classificamos o resultado financeiro</td>
+              <td>Cada linha correta: saldo de até R$ 10,00 para os Livros 4 (R$ 1,81), 14 (R$ 2,16), 8 (R$ 5,96), 19 (R$ 6,79), 13 (R$ 7,62), 3 (R$ 8,44) e 7 (R$ 8,45); saldo superior a R$ 10,00 para os demais (Livro 17 R$ 10,52; Livro 11 R$ 10,94; Livro 2 R$ 11,76; Livros 1, 6 e 15 R$ 11,77; Livro 10 R$ 14,26; Livro 20 R$ 16,75; Livro 16 R$ 19,24; Livro 5 R$ 21,73; Livro 18 R$ 22,56; Livro 9 R$ 25,05; Livro 12 R$ 33,35). Pendência registrada: com o piso da massa em R$ 7,00, nenhum item atinge prejuízo ou equilíbrio (break-even matemático em R$ 4,82), cobertura pendente de modelagem futura do negócio</td>
+              <td class="col-tool">Sheets</td>
+              <td class="col-tech">Consolidação</td>
+              <td><span class="badge-tc badge-sheet">PLANILHA</span></td>
+              <td><span class="badge-status status-pending">Pendente</span></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- FRENTE 3 -->
+    <section id="frente-3" class="front-section">
+      <div class="front-header">
+        <h2 class="front-header-title">Frente 3: Fotos, Avarias e Transparência Visual (TC-16 a TC-23)</h2>
+        <p class="front-header-subtitle">
+          <strong>Padrão do projeto:</strong> 2 fotos para livro em bom estado (sem termo do dicionário na descrição), 4 fotos para livro com avaria (termo do dicionário presente e fotos extras evidenciando o defeito). Quantitativo de 1 ou 3 fotos configura erro de padronização.<br>
+          <strong>Diretriz de teste negativo:</strong> A aprovação do caso de teste consiste na identificação precisa e no registro formal da não conformidade.<br>
+          <strong>Massa:</strong> Livros 1, 2, 3, 4, 7, 12, 16, 17 e 18.
+        </p>
+      </div>
+
+      <div class="table-responsive">
+        <table class="qa-table">
+          <thead>
+            <tr>
+              <th style="width: 70px;">ID</th>
+              <th style="width: 170px;">Teste</th>
+              <th>O que faremos</th>
+              <th>Resultado esperado</th>
+              <th style="width: 120px;">Ferramenta</th>
+              <th style="width: 150px;">Técnica</th>
+              <th style="width: 130px;">Badge</th>
+              <th style="width: 90px;">Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="col-id">TC-16</td>
+              <td class="col-title">Livro em bom estado (2 fotos)</td>
+              <td>Anúncio do Livro 1 sem avaria: validar exatamente 2 fotos e descrição sem menção ao dicionário de termos depreciativos</td>
+              <td>CONFORME. Nota de rastreabilidade: renumeração do piloto TC-18 da v2.0, executado com sucesso em 07/10/2026 (evidências em evidencias/2026-10-07/)</td>
+              <td class="col-tool">Playwright</td>
+              <td class="col-tech">Valor limite (2 fotos)</td>
+              <td><span class="badge-tc badge-auto">AUTOMATIZADO</span></td>
+              <td><span class="badge-status status-done">Executado no piloto (como TC-18 v2.0)</span></td>
+            </tr>
+            <tr>
+              <td class="col-id">TC-17</td>
+              <td class="col-title">Avaria devidamente identificada</td>
+              <td>Livro 2 (rasgo e manchas amareladas): validar 4 fotos evidenciando os defeitos e a descrição "Exemplar com rasgo na borda e manchas amareladas no corte lateral"</td>
+              <td>CONFORME: fotos fiéis e avarias citadas nominalmente na descrição</td>
+              <td class="col-tool">Playwright + julgamento humano</td>
+              <td class="col-tech">Valor limite (4 fotos) + dicionário</td>
+              <td><span class="badge-tc badge-semiauto">SEMIAUTOMATIZADO</span></td>
+              <td><span class="badge-status status-pending">Pendente</span></td>
+            </tr>
+            <tr>
+              <td class="col-id">TC-18</td>
+              <td class="col-title">Avaria com quantidade incorreta de fotos</td>
+              <td>Livro 4 (lombada gasta e fita adesiva): a descrição cita as avarias corretamente, mas a galeria tem apenas 3 fotos</td>
+              <td>O QA sinaliza a não conformidade e reprova o anúncio; a aprovação do caso decorre da identificação correta da falha</td>
+              <td class="col-tool">Playwright</td>
+              <td class="col-tech">Regras de negócio</td>
+              <td><span class="badge-tc badge-auto">AUTOMATIZADO</span></td>
+              <td><span class="badge-status status-pending">Pendente</span></td>
+            </tr>
+            <tr>
+              <td class="col-id">TC-19</td>
+              <td class="col-title">Avaria não descrita</td>
+              <td>Livro 7 (grifo e linha sublinhada): 4 fotos publicadas, mas a descrição é genérica e não cita as avarias existentes</td>
+              <td>O QA registra a omissão e reprova o anúncio, sem alterar a descrição para mascarar o teste</td>
+              <td class="col-tool">Playwright + julgamento humano</td>
+              <td class="col-tech">Leitura de texto + dicionário</td>
+              <td><span class="badge-tc badge-semiauto">SEMIAUTOMATIZADO</span></td>
+              <td><span class="badge-status status-pending">Pendente</span></td>
+            </tr>
+            <tr>
+              <td class="col-id">TC-20</td>
+              <td class="col-title">Anúncio com apenas 1 foto</td>
+              <td>Livro 3 (bom estado) cadastrado com apenas 1 foto na galeria</td>
+              <td>ERRO identificado: anúncio abaixo do mínimo estipulado de 2 fotos, reprovado pelo auditor</td>
+              <td class="col-tool">Playwright</td>
+              <td class="col-tech">Valor limite (mínimo - 1)</td>
+              <td><span class="badge-tc badge-auto">AUTOMATIZADO</span></td>
+              <td><span class="badge-status status-pending">Pendente</span></td>
+            </tr>
+            <tr>
+              <td class="col-id">TC-21</td>
+              <td class="col-title">Anúncio com 3 fotos</td>
+              <td>Livro 12 (avariado, oxidação e manchas amareladas) cadastrado com 3 fotos na galeria</td>
+              <td>ERRO identificado: galeria fora do padrão de 2 ou 4 fotos, anúncio reprovado</td>
+              <td class="col-tool">Playwright</td>
+              <td class="col-tech">Valor limite (padrão - 1)</td>
+              <td><span class="badge-tc badge-auto">AUTOMATIZADO</span></td>
+              <td><span class="badge-status status-pending">Pendente</span></td>
+            </tr>
+            <tr>
+              <td class="col-id">TC-22</td>
+              <td class="col-title">Omissão parcial de avarias</td>
+              <td>Livro 18 (amarelado e marcas de manuseio): a descrição informa apenas "Exemplar com corte lateral amarelado", omitindo as marcas de manuseio</td>
+              <td>O QA registra a descrição incompleta e reprova o anúncio por falta de transparência visual</td>
+              <td class="col-tool">Playwright + julgamento humano</td>
+              <td class="col-tech">Leitura de texto + dicionário</td>
+              <td><span class="badge-tc badge-semiauto">SEMIAUTOMATIZADO</span></td>
+              <td><span class="badge-status status-pending">Pendente</span></td>
+            </tr>
+            <tr>
+              <td class="col-id">TC-23</td>
+              <td class="col-title">Fotos de outro exemplar</td>
+              <td>Livro 16 (A Androide de Limpeza) cadastrado com fotos do Livro 17 (Vidas Secas sob os Dois Sóis) na galeria pública</td>
+              <td>O QA identifica a quebra de identidade visual comparando capa, edição e título, e reprova o anúncio imediatamente; sob nenhuma hipótese fotos divergentes são validadas</td>
+              <td class="col-tool">Inspeção humana</td>
+              <td class="col-tech">Comparação visual</td>
+              <td><span class="badge-tc badge-visual">VERIFICAÇÃO VISUAL</span></td>
+              <td><span class="badge-status status-pending">Pendente</span></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- TRACEABILITY SECTION -->
+    <section id="rastreabilidade" class="trace-card">
+      <h2 class="section-card-title">Matriz de Rastreabilidade: Versão 2.0 para Versão 2.1</h2>
+      <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 12px;">
+        Mapeamento de evolução entre as versões da suíte após redefinição de escopo para canal único (Estante Virtual).
+      </p>
+
+      <table class="trace-table">
+        <thead>
+          <tr>
+            <th style="width: 45%;">Identificador na Versão 2.0</th>
+            <th style="width: 55%;">Identificador e Condição na Versão 2.1</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>TC-01 (v2.0, cadastro cruzado)</td>
+            <td>TC-01 (existência, ressignificado para canal único)</td>
+          </tr>
+          <tr>
+            <td>TC-03</td>
+            <td>TC-02 (consistência de título)</td>
+          </tr>
+          <tr>
+            <td>TC-04</td>
+            <td>TC-03 (consistência de preço)</td>
+          </tr>
+          <tr>
+            <td>TC-05</td>
+            <td>TC-04 (descrição sem avarias falsas)</td>
+          </tr>
+          <tr>
+            <td>TC-06</td>
+            <td>TC-05 (volumetria de fotos por estado)</td>
+          </tr>
+          <tr>
+            <td>TC-08</td>
+            <td>TC-06 (estoque por título)</td>
+          </tr>
+          <tr>
+            <td>TC-07 + TC-09</td>
+            <td>TC-07 (fusão: anúncio ativo sem estoque)</td>
+          </tr>
+          <tr>
+            <td>TC-11</td>
+            <td>TC-08 (quantidade total de exemplares)</td>
+          </tr>
+          <tr>
+            <td>Sem correspondente na versão 2.0</td>
+            <td>TC-09 (novo caso inserido: anúncio faltante)</td>
+          </tr>
+          <tr>
+            <td>TC-12 a TC-17</td>
+            <td>TC-10 a TC-15 (casos de precificação e saldo operacional)</td>
+          </tr>
+          <tr>
+            <td>TC-18 (Estante Virtual, piloto executado)</td>
+            <td>TC-16 (livro em bom estado, 2 fotos)</td>
+          </tr>
+          <tr>
+            <td>TC-21</td>
+            <td>TC-17 (avaria devidamente identificada)</td>
+          </tr>
+          <tr>
+            <td>TC-22</td>
+            <td>TC-18 (avaria com quantidade incorreta de fotos)</td>
+          </tr>
+          <tr>
+            <td>TC-23</td>
+            <td>TC-19 (avaria não descrita)</td>
+          </tr>
+          <tr>
+            <td>TC-19</td>
+            <td>TC-20 (anúncio com apenas 1 foto)</td>
+          </tr>
+          <tr>
+            <td>TC-20</td>
+            <td>TC-21 (anúncio com 3 fotos)</td>
+          </tr>
+          <tr>
+            <td>TC-25</td>
+            <td>TC-22 (omissão parcial de avarias)</td>
+          </tr>
+          <tr>
+            <td>TC-26</td>
+            <td>TC-23 (fotos de outro exemplar)</td>
+          </tr>
+          <tr>
+            <td>TC-02 (edição) e TC-10 (pausa e reativação)</td>
+            <td>Casos futuros, postergados para fases seguintes</td>
+          </tr>
+          <tr>
+            <td>TC-24</td>
+            <td>Reavaliado no processo de reescopo</td>
+          </tr>
+          <tr>
+            <td>TC-27 a TC-29 (API Postman)</td>
+            <td>Fase 2, condicionados à aprovação formal de token do Mercado Livre</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <p style="font-size: 0.8rem; color: #94a3b8; margin-top: 14px; font-style: italic;">
+        Nota histórica: Os artefatos da versão 2.0 (script <code>test_tc18_fotos_ev.py</code> e diretórios <code>evidencias/2026-10-07</code> e <code>evidencias/2026-10-08</code>) permanecem inalterados como registro de auditoria e recebem a indicação expressa "(v2.0)" quando citados.
+      </p>
+    </section>
+
+    <!-- PENDING ITEMS SECTION -->
+    <section id="pendencias" class="pending-card">
+      <h2 class="section-card-title">Pendências de Confirmação do Negócio</h2>
+      <p style="font-size: 0.85rem; color: var(--text-muted);">
+        Itens formais a serem definidos junto aos responsáveis pelo catálogo e finanças do sebo:
+      </p>
+
+      <ol class="pending-list">
+        <li>Definir o modelo de rateio da mensalidade de R$ 69,00 por livro ou por venda consolidada.</li>
+        <li>Confirmar se e como os custos de deslocamento até os Correios entram na composição do custo unitário por venda.</li>
+        <li>Validar o ponto de break-even definitivo através da fórmula completa (a estimativa atual com custos puramente variáveis resulta em R$ 4,82, valor abaixo do piso da massa de testes).</li>
+        <li>Confirmar que os percentuais e taxas correspondem estritamente ao plano vigente da plataforma antes do uso em rotina operacional.</li>
+        <li>Preencher o código ISBN real do Livro 21 antes do início dos cadastros oficiais no marketplace.</li>
+      </ol>
+    </section>
+
+    <!-- Footer -->
+    <footer class="page-footer">
+      <div>
+        <strong>Projeto PAC: TripleTen Brasil</strong> | Plano de Testes v2.1, outubro/2026 | Par do documento: Documentação de Requisitos v2.1
+      </div>
+      <div style="margin-top: 6px;">
+        Mudança de escopo registrada: canal único (Estante Virtual) após bloqueio empírico da automação no Mercado Livre, com evidências versionadas em repositório; expansão cross-channel planejada como Fase 2 condicionada à liberação de credenciais de API.
+      </div>
+    </footer>
+
+  </main>
+
+<script>
+/* Skip artifact shell — fixed helpers served beside every artifact. */
+(function () {
+  "use strict";
+
+  var fmt = {
+    num: function (v, opts) { return new Intl.NumberFormat("pt-BR", opts || {}).format(v); },
+    brl: function (v) { return new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(v); },
+    pct: function (v) { return new Intl.NumberFormat("pt-BR", { style: "percent", maximumFractionDigits: 1 }).format(v); }
+  };
+
+  // axisFmt keeps axis tick labels short (compact notation) so long values
+  // (e.g. full BRL amounts) never clip against the plot edge.
+  function axisFmt(v) {
+    return fmt.num(v, { notation: "compact", maximumFractionDigits: 1 });
+  }
+
+  // format accepts a function OR one of the fmt names ("num" | "brl" | "pct").
+  function coerceFormat(spec) {
+    if (typeof spec === "function") return spec;
+    if (typeof spec === "string" && fmt[spec]) return fmt[spec];
+    return function (v) { return fmt.num(v); };
+  }
+
+  function accent() {
+    return getComputedStyle(document.documentElement).getPropertyValue("--accent").trim() || "#2563eb";
+  }
+  function mutedColor() {
+    return getComputedStyle(document.documentElement).getPropertyValue("--text-muted").trim() || "#5b6472";
+  }
+  function svgEl(tag, attrs) {
+    var el = document.createElementNS("http://www.w3.org/2000/svg", tag);
+    for (var k in attrs) el.setAttribute(k, attrs[k]);
+    return el;
+  }
+  function frame(el, w, h) {
+    var svg = svgEl("svg", { viewBox: "0 0 " + w + " " + h, role: "img" });
+    el.innerHTML = "";
+    el.appendChild(svg);
+    return svg;
+  }
+
+  // maxOf guards the axis scale: empty values would give -Infinity (truthy,
+  // so "|| 1" can't catch it) and a non-positive max would flip the chart.
+  function maxOf(values) {
+    var m = values.length ? Math.max.apply(null, values) : 0;
+    return m > 0 ? m : 1;
+  }
+
+  // bar(el, {labels:[], values:[], color?, format?}) — vertical bar chart.
+  function bar(el, cfg) {
+    var W = 640, H = 280, padL = 46, padB = 30, padT = 12;
+    var svg = frame(el, W, H);
+    var max = maxOf(cfg.values);
+    var n = cfg.values.length;
+    var plotW = W - padL - 12, plotH = H - padT - padB;
+    var step = plotW / n, bw = Math.min(step * 0.62, 64);
+    var color = cfg.color || accent();
+    var f = coerceFormat(cfg.format);
+    for (var g = 0; g <= 4; g++) {
+      var gy = padT + plotH - (plotH * g) / 4;
+      svg.appendChild(svgEl("line", { x1: padL, y1: gy, x2: W - 12, y2: gy, stroke: "currentColor", "stroke-opacity": 0.08 }));
+      var lbl = svgEl("text", { x: padL - 8, y: gy + 4, "text-anchor": "end", "font-size": 10, fill: mutedColor() });
+      lbl.textContent = axisFmt((max * g) / 4);
+      svg.appendChild(lbl);
+    }
+    cfg.values.forEach(function (v, i) {
+      var bh = Math.max(0, (v / max) * plotH);
+      var x = padL + i * step + (step - bw) / 2;
+      var y = padT + plotH - bh;
+      var r = svgEl("rect", { x: x, y: y, width: bw, height: bh, rx: 4, fill: color });
+      var t = svgEl("title", {});
+      t.textContent = cfg.labels[i] + ": " + f(v);
+      r.appendChild(t);
+      svg.appendChild(r);
+      var tx = svgEl("text", { x: x + bw / 2, y: H - 10, "text-anchor": "middle", "font-size": 11, fill: mutedColor() });
+      tx.textContent = cfg.labels[i];
+      svg.appendChild(tx);
+    });
+  }
+
+  // line(el, {labels:[], values:[], color?, format?}) — single-series line.
+  function line(el, cfg) {
+    var W = 640, H = 280, padL = 46, padB = 30, padT = 12;
+    var svg = frame(el, W, H);
+    var max = maxOf(cfg.values);
+    var n = cfg.values.length;
+    var plotW = W - padL - 16, plotH = H - padT - padB;
+    var color = cfg.color || accent();
+    var f = coerceFormat(cfg.format);
+    for (var g = 0; g <= 4; g++) {
+      var gy = padT + plotH - (plotH * g) / 4;
+      svg.appendChild(svgEl("line", { x1: padL, y1: gy, x2: W - 16, y2: gy, stroke: "currentColor", "stroke-opacity": 0.08 }));
+      var lbl = svgEl("text", { x: padL - 8, y: gy + 4, "text-anchor": "end", "font-size": 10, fill: mutedColor() });
+      lbl.textContent = axisFmt((max * g) / 4);
+      svg.appendChild(lbl);
+    }
+    var pts = cfg.values.map(function (v, i) {
+      var x = padL + (n === 1 ? plotW / 2 : (plotW * i) / (n - 1));
+      var y = padT + plotH - (v / max) * plotH;
+      return [x, y];
+    });
+    var d = pts.map(function (p, i) { return (i ? "L" : "M") + p[0].toFixed(1) + " " + p[1].toFixed(1); }).join(" ");
+    svg.appendChild(svgEl("path", { d: d, fill: "none", stroke: color, "stroke-width": 2, "stroke-linejoin": "round" }));
+    pts.forEach(function (p, i) {
+      var c = svgEl("circle", { cx: p[0], cy: p[1], r: 3.5, fill: color });
+      var t = svgEl("title", {});
+      t.textContent = cfg.labels[i] + ": " + f(cfg.values[i]);
+      c.appendChild(t);
+      svg.appendChild(c);
+      var tx = svgEl("text", { x: p[0], y: H - 10, "text-anchor": "middle", "font-size": 11, fill: mutedColor() });
+      tx.textContent = cfg.labels[i];
+      svg.appendChild(tx);
+    });
+  }
+
+  // donut(el, {labels:[], values:[], colors?}) — donut with center total.
+  function donut(el, cfg) {
+    var W = 320, H = 280, cx = W / 2, cy = H / 2, R = 92, r = 58;
+    var svg = frame(el, W, H);
+    var total = cfg.values.reduce(function (a, b) { return a + b; }, 0) || 1;
+    var palette = cfg.colors || [accent(), "#1baf7a", "#eda100", "#e34948", "#4a3aa7", "#e87ba4"];
+    var a0 = -Math.PI / 2;
+    cfg.values.forEach(function (v, i) {
+      var a1 = a0 + (v / total) * Math.PI * 2;
+      var large = a1 - a0 > Math.PI ? 1 : 0;
+      var p = ["M", cx + R * Math.cos(a0), cy + R * Math.sin(a0),
+        "A", R, R, 0, large, 1, cx + R * Math.cos(a1), cy + R * Math.sin(a1),
+        "L", cx + r * Math.cos(a1), cy + r * Math.sin(a1),
+        "A", r, r, 0, large, 0, cx + r * Math.cos(a0), cy + r * Math.sin(a0), "Z"].join(" ");
+      var path = svgEl("path", { d: p, fill: palette[i % palette.length] });
+      var t = svgEl("title", {});
+      t.textContent = cfg.labels[i] + ": " + fmt.num(v) + " (" + fmt.pct(v / total) + ")";
+      path.appendChild(t);
+      svg.appendChild(path);
+      a0 = a1;
+    });
+    var center = svgEl("text", { x: cx, y: cy + 5, "text-anchor": "middle", "font-size": 20, "font-weight": 650, fill: "currentColor" });
+    center.textContent = fmt.num(total);
+    svg.appendChild(center);
+  }
+
+  window.skipShell = { fmt: fmt };
+  window.skipChart = { bar: bar, line: line, donut: donut };
+})();
+
+</script>
+</body>
+</html>

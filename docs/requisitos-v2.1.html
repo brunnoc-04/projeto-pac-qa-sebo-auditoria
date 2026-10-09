@@ -1,0 +1,1425 @@
+<!DOCTYPE html>
+<html lang="pt-BR" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Documentação de Requisitos v2.1: QA Estante Virtual</title>
+  
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/basecoat-css@1.0.2/dist/basecoat.cdn.min.css">
+  <style>
+/* Skip artifact shell — fixed styles served beside every artifact.
+   Complements basecoat; artifacts override --accent for their own identity. */
+:root {
+  color-scheme: light dark;
+  --accent: #2563eb;
+  --accent-contrast: #ffffff;
+  --accent-text: color-mix(in srgb, var(--accent) 72%, #000);
+  --bg: #f8f9fb;
+  --surface: #ffffff;
+  --text: #14171f;
+  --text-muted: #5b6472;
+  --border: rgba(20, 23, 31, 0.10);
+  --radius: 10px;
+  --shadow: 0 1px 3px rgba(20, 23, 31, 0.08);
+  --space: 16px;
+}
+/* Theme resolution. Without data-theme the viewer's system preference decides,
+   as it always did. With it, the artifact's own choice wins in BOTH directions:
+   a page that hardcodes one palette must not be handed the opposite set of
+   tokens by the machine it happens to be opened on. The dark values appear
+   twice because a media query cannot be folded into a selector list.
+   The attribute sits inside :where() so these blocks keep the specificity of a
+   bare :root — the page's own <style> is linked after this file and must go on
+   overriding any token it wants, exactly as it could before. */
+@media (prefers-color-scheme: dark) {
+  :root:where(:not([data-theme="light"])) {
+    --accent-text: color-mix(in srgb, var(--accent) 78%, #fff);
+    --bg: #101318;
+    --surface: #181c23;
+    --text: #eef1f6;
+    --text-muted: #9aa4b2;
+    --border: rgba(238, 241, 246, 0.12);
+    --shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
+  }
+}
+:root:where([data-theme="dark"]) {
+  color-scheme: dark;
+  --accent-text: color-mix(in srgb, var(--accent) 78%, #fff);
+  --bg: #101318;
+  --surface: #181c23;
+  --text: #eef1f6;
+  --text-muted: #9aa4b2;
+  --border: rgba(238, 241, 246, 0.12);
+  --shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
+}
+:root:where([data-theme="light"]) { color-scheme: light; }
+* { box-sizing: border-box; }
+html, body { margin: 0; padding: 0; }
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  line-height: 1.55;
+  -webkit-font-smoothing: antialiased;
+}
+img { max-width: 100%; display: block; }
+
+.shell-container { max-width: 1100px; margin: 0 auto; padding: 0 20px; }
+.shell-section { padding: calc(var(--space) * 2) 0; }
+.shell-grid { display: grid; gap: var(--space); grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); }
+.shell-toolbar { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin-bottom: var(--space); }
+.shell-footer { padding: 24px 0 40px; color: var(--text-muted); font-size: 13px; }
+
+.shell-hero { padding: calc(var(--space) * 3) 0 calc(var(--space) * 2); }
+.shell-hero h1 { font-size: clamp(26px, 4vw, 40px); line-height: 1.15; margin: 0 0 10px; text-wrap: balance; }
+.shell-hero p { color: var(--text-muted); max-width: 60ch; margin: 0; }
+
+.panel {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: var(--space);
+}
+
+.kpi { display: flex; flex-direction: column; gap: 4px; }
+.kpi .kpi-value { font-size: 28px; font-weight: 650; line-height: 1.1; }
+.kpi .kpi-label { font-size: 13px; color: var(--text-muted); }
+.kpi .kpi-delta { font-size: 12.5px; font-weight: 600; }
+.kpi .kpi-delta.up { color: #0a8f3c; }
+.kpi .kpi-delta.down { color: #cf3131; }
+
+table.shell-table { border-collapse: collapse; width: 100%; font-size: 14px; }
+table.shell-table th {
+  text-align: left; font-size: 11.5px; letter-spacing: 0.05em; text-transform: uppercase;
+  color: var(--text-muted); font-weight: 600;
+}
+table.shell-table th, table.shell-table td { padding: 9px 12px 9px 0; border-bottom: 1px solid var(--border); }
+table.shell-table td.num, table.shell-table th.num { text-align: right; font-variant-numeric: tabular-nums; }
+table.shell-table tbody tr:hover { background: color-mix(in srgb, var(--accent) 6%, transparent); }
+
+.chart-box { width: 100%; min-height: 220px; }
+.chart-box svg { width: 100%; height: auto; display: block; }
+
+.muted { color: var(--text-muted); }
+.accent { color: var(--accent-text); }
+.shell-badge {
+  display: inline-flex; align-items: center; gap: 6px;
+  font-size: 12px; font-weight: 600; padding: 3px 10px; border-radius: 999px;
+  background: color-mix(in srgb, var(--accent) 12%, transparent); color: var(--accent-text);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .shell-fade { animation: shell-fade 400ms ease both; }
+  @keyframes shell-fade { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+}
+
+</style>
+  
+
+  <style>
+    :root {
+      --accent: #06b6d4;
+      --accent-rgb: 6, 182, 212;
+      --bg: #090d16;
+      --surface: #0f172a;
+      --surface-elevated: #152238;
+      --border: #1e293b;
+      --border-focus: #0ea5e9;
+      --text: #e2e8f0;
+      --text-muted: #94a3b8;
+      --font-mono: 'JetBrains Mono', monospace;
+    }
+
+    body {
+      background-color: var(--bg);
+      color: var(--text);
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      line-height: 1.65;
+      padding-bottom: 3rem;
+    }
+
+    .top-action-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 1rem 0;
+      border-bottom: 1px solid var(--border);
+      margin-bottom: 2rem;
+      flex-wrap: wrap;
+      gap: 1rem;
+    }
+
+    .version-tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-family: var(--font-mono);
+      font-size: 0.82rem;
+      background: rgba(6, 182, 212, 0.12);
+      border: 1px solid rgba(6, 182, 212, 0.35);
+      color: #38bdf8;
+      padding: 0.25rem 0.75rem;
+      border-radius: 9999px;
+    }
+
+    .btn-print {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      background: var(--surface-elevated);
+      color: #f1f5f9;
+      border: 1px solid var(--border);
+      padding: 0.55rem 1.1rem;
+      border-radius: 6px;
+      font-size: 0.875rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .btn-print:hover {
+      background: #1e293b;
+      border-color: #38bdf8;
+      color: #38bdf8;
+    }
+
+    .doc-header {
+      margin-bottom: 2.5rem;
+    }
+
+    .doc-title {
+      font-size: 2.1rem;
+      font-weight: 700;
+      color: #f8fafc;
+      letter-spacing: -0.025em;
+      line-height: 1.25;
+      margin-bottom: 0.75rem;
+    }
+
+    .doc-subtitle {
+      font-size: 1.05rem;
+      color: var(--text-muted);
+      max-width: 900px;
+      line-height: 1.55;
+    }
+
+    .nav-toc {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 1.25rem 1.5rem;
+      margin-bottom: 3rem;
+    }
+
+    .nav-toc-title {
+      font-size: 0.85rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: #38bdf8;
+      font-weight: 700;
+      margin-bottom: 0.75rem;
+    }
+
+    .toc-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 0.4rem 1.25rem;
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+
+    .toc-grid a {
+      color: #cbd5e1;
+      text-decoration: none;
+      font-size: 0.875rem;
+      display: inline-block;
+      transition: color 0.15s;
+    }
+
+    .toc-grid a:hover {
+      color: #38bdf8;
+      text-decoration: underline;
+    }
+
+    .doc-section {
+      margin-bottom: 3.5rem;
+      scroll-margin-top: 1.5rem;
+    }
+
+    .section-title {
+      font-size: 1.4rem;
+      font-weight: 700;
+      color: #f1f5f9;
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 0.6rem;
+      margin-bottom: 1.25rem;
+      letter-spacing: -0.015em;
+    }
+
+    .section-num {
+      color: #06b6d4;
+      font-family: var(--font-mono);
+      font-size: 1.1rem;
+    }
+
+    .card-thesis {
+      background: linear-gradient(135deg, rgba(6, 182, 212, 0.08) 0%, rgba(15, 23, 42, 0.95) 100%);
+      border: 1px solid rgba(6, 182, 212, 0.35);
+      border-left: 4px solid #06b6d4;
+      padding: 1.4rem 1.5rem;
+      border-radius: 8px;
+      margin: 1.25rem 0;
+    }
+
+    .card-thesis-title {
+      font-weight: 700;
+      font-size: 1rem;
+      color: #38bdf8;
+      margin-bottom: 0.5rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .card-info {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-left: 4px solid #0ea5e9;
+      padding: 1rem 1.25rem;
+      border-radius: 6px;
+      margin: 1rem 0;
+    }
+
+    .card-alert {
+      background: rgba(225, 29, 72, 0.08);
+      border: 1px solid rgba(225, 29, 72, 0.3);
+      border-left: 4px solid #f43f5e;
+      padding: 1rem 1.25rem;
+      border-radius: 6px;
+      margin: 1rem 0;
+    }
+
+    .card-alert-title {
+      font-weight: 700;
+      color: #fb7185;
+      margin-bottom: 0.35rem;
+    }
+
+    .rn-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 1rem;
+      margin: 1.25rem 0;
+    }
+
+    .rn-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 1.25rem 1.4rem;
+      transition: border-color 0.2s;
+    }
+
+    .rn-card:hover {
+      border-color: #334155;
+    }
+
+    .rn-badge {
+      display: inline-block;
+      background: rgba(6, 182, 212, 0.15);
+      color: #38bdf8;
+      font-family: var(--font-mono);
+      font-weight: 700;
+      font-size: 0.85rem;
+      padding: 0.2rem 0.55rem;
+      border-radius: 4px;
+      margin-bottom: 0.5rem;
+      border: 1px solid rgba(6, 182, 212, 0.3);
+    }
+
+    .doc-table-wrap {
+      overflow-x: auto;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      margin: 1.25rem 0;
+      background: var(--surface);
+    }
+
+    table.doc-table {
+      width: 100%;
+      border-collapse: collapse;
+      text-align: left;
+      font-size: 0.88rem;
+    }
+
+    table.doc-table th {
+      background: #111a2e;
+      color: #f1f5f9;
+      font-weight: 600;
+      padding: 0.85rem 1rem;
+      border-bottom: 1px solid var(--border);
+      white-space: nowrap;
+    }
+
+    table.doc-table td {
+      padding: 0.75rem 1rem;
+      border-bottom: 1px solid #162032;
+      color: #cbd5e1;
+      vertical-align: top;
+    }
+
+    table.doc-table tr:last-child td {
+      border-bottom: none;
+    }
+
+    table.doc-table tr:hover td {
+      background: rgba(255, 255, 255, 0.02);
+    }
+
+    .tag-container {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      margin: 1rem 0;
+    }
+
+    .term-tag {
+      background: var(--surface);
+      border: 1px solid #273549;
+      color: #38bdf8;
+      font-family: var(--font-mono);
+      font-size: 0.83rem;
+      padding: 0.3rem 0.65rem;
+      border-radius: 4px;
+      transition: all 0.15s ease;
+    }
+
+    .term-tag:hover {
+      border-color: #06b6d4;
+      background: rgba(6, 182, 212, 0.1);
+    }
+
+    .stats-summary {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+      gap: 1rem;
+      margin: 1.25rem 0;
+    }
+
+    .stat-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 1.1rem;
+    }
+
+    .stat-card .val {
+      font-size: 1.6rem;
+      font-weight: 700;
+      color: #38bdf8;
+      font-family: var(--font-mono);
+      line-height: 1.2;
+    }
+
+    .stat-card .lbl {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      margin-top: 0.35rem;
+    }
+
+    .table-filter-bar {
+      display: flex;
+      gap: 0.75rem;
+      margin-bottom: 0.75rem;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+
+    .filter-input {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      color: #f8fafc;
+      padding: 0.5rem 0.85rem;
+      border-radius: 6px;
+      font-size: 0.85rem;
+      flex: 1;
+      min-width: 240px;
+    }
+
+    .filter-input:focus {
+      outline: none;
+      border-color: #38bdf8;
+    }
+
+    .filter-counter {
+      font-size: 0.82rem;
+      color: var(--text-muted);
+      font-family: var(--font-mono);
+    }
+
+    .doc-list {
+      padding-left: 1.3rem;
+      margin: 0.85rem 0;
+    }
+
+    .doc-list li {
+      margin-bottom: 0.6rem;
+      color: #cbd5e1;
+    }
+
+    .doc-footer {
+      border-top: 1px solid var(--border);
+      margin-top: 4rem;
+      padding-top: 1.75rem;
+      color: var(--text-muted);
+      font-size: 0.84rem;
+      line-height: 1.6;
+      text-align: center;
+    }
+
+    @media print {
+      body {
+        background: #ffffff !important;
+        color: #000000 !important;
+        font-size: 10pt;
+      }
+      .top-action-bar, .nav-toc, .table-filter-bar {
+        display: none !important;
+      }
+      .doc-section {
+        margin-bottom: 1.5rem;
+        page-break-inside: avoid;
+      }
+      .card-thesis, .card-info, .card-alert, .rn-card, .stat-card, .doc-table-wrap {
+        background: #ffffff !important;
+        border: 1px solid #cccccc !important;
+        color: #000000 !important;
+      }
+      table.doc-table th {
+        background: #eeeeee !important;
+        color: #000000 !important;
+      }
+      table.doc-table td {
+        color: #000000 !important;
+        border-bottom: 1px solid #eeeeee !important;
+      }
+      .section-title {
+        color: #000000 !important;
+        border-bottom: 1px solid #000000 !important;
+      }
+      .version-tag, .rn-badge, .term-tag {
+        border: 1px solid #999999 !important;
+        color: #000000 !important;
+        background: none !important;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="shell-container">
+    
+    <!-- Barra Superior -->
+    <header class="top-action-bar">
+      <div class="version-tag">
+        <span>ESTANTE VIRTUAL</span>
+        <span>•</span>
+        <span>REQUISITOS V2.1</span>
+      </div>
+      <div>
+        <button type="button" class="btn-print" onclick="window.print()">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="6 9 6 2 18 2 18 9"></polyline>
+            <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path>
+            <rect x="6" y="14" width="12" height="8"></rect>
+          </svg>
+          Imprimir / Salvar em PDF
+        </button>
+      </div>
+    </header>
+
+    <!-- Cabeçalho Principal -->
+    <div class="doc-header">
+      <h1 class="doc-title">Documentação de Requisitos v2.1: Auditoria de QA para Sebo em Marketplace</h1>
+      <p class="doc-subtitle">
+        Projeto PAC (TripleTen Brasil). Autor: Brunno Cesar, Analista de QA. Estante Virtual: estoque, precificação e transparência visual. Versão 2.1, outubro/2026. Documento par do Plano de Testes v2.1 (TC-01 a TC-23).
+      </p>
+    </div>
+
+    <!-- Sumário Navegável -->
+    <nav class="nav-toc" aria-label="Sumário da Documentação">
+      <div class="nav-toc-title">Sumário Executivo</div>
+      <ul class="toc-grid">
+        <li><a href="#sec-1">1. Contexto e objetivo do documento</a></li>
+        <li><a href="#sec-2">2. Mudança de escopo: registro de decisão</a></li>
+        <li><a href="#sec-3">3. Canal em escopo e Fase 2</a></li>
+        <li><a href="#sec-4">4. Base de custos e tarifas</a></li>
+        <li><a href="#sec-5">5. Régua de precificação (Frente 2)</a></li>
+        <li><a href="#sec-6">6. Regra de fotos e transparência (Frente 3)</a></li>
+        <li><a href="#sec-7">7. Dicionário de avarias</a></li>
+        <li><a href="#sec-8">8. Lista do Livreiro (Fonte da Verdade)</a></li>
+        <li><a href="#sec-9">9. Requisitos consolidados das frentes</a></li>
+        <li><a href="#sec-10">10. Fluxo de ferramentas e evidências</a></li>
+        <li><a href="#sec-11">11. Fora do escopo da auditoria</a></li>
+        <li><a href="#sec-12">12. Pendências de confirmação</a></li>
+      </ul>
+    </nav>
+
+    <!-- SEÇÃO 1 -->
+    <section id="sec-1" class="doc-section">
+      <h2 class="section-title"><span class="section-num">01.</span> Contexto e objetivo do documento</h2>
+      <p>
+        Este documento consolida os requisitos e as regras de negócio que regem a auditoria de QA aplicada à operação de um livreiro independente que vende exclusivamente na Estante Virtual. É a fonte única de verdade que o analista de QA consulta antes e durante a execução dos 23 casos de teste do plano de testes associado. O objeto da auditoria é o SEBO (a operação do livreiro), e não a plataforma: os testes não validam o comportamento interno da Estante Virtual, validam a consistência, a saúde financeira e a transparência dos anúncios publicados pelo livreiro.
+      </p>
+
+      <div class="card-info">
+        <strong>Distinção fundamental:</strong> o QA do marketplace testa a plataforma. O QA desta auditoria testa o uso que o livreiro faz da plataforma.
+      </div>
+
+      <div class="card-thesis">
+        <div class="card-thesis-title">A tese desta auditoria</div>
+        <p style="margin:0;">
+          O livreiro que controla o estoque de forma manual, seja num caderno, seja numa lista simples, publicou uma vitrine que deriva do estoque real e da política de preços. Sem verificação contínua, a vitrine anuncia livro que não existe, exibe preço que não é o planejado, omite avarias e conta estoque que não corresponde à prateleira. A comparação automatizada e manual entre a vitrine publicada e a Lista do Livreiro (a fonte da verdade do projeto) demonstra que esse controle é imprescindível para saber o que se tem, o que se lucra e o que se perde.
+        </p>
+      </div>
+    </section>
+
+    <!-- SEÇÃO 2 -->
+    <section id="sec-2" class="doc-section">
+      <h2 class="section-title"><span class="section-num">02.</span> Mudança de escopo: registro de decisão</h2>
+      <p>
+        O escopo original (v2.0) contemplava verificação em dois canais, Estante Virtual e Mercado Livre, sem sistema integrador. O piloto da suíte, o caso TC-18 da v2.0, foi executado na Estante Virtual em 07/10/2026 com sucesso. Na tentativa de replicar a verificação no Mercado Livre em 08/10/2026, a plataforma bloqueou a automação em camadas sucessivas: um popup de frete sobreposto à galeria de fotos, um overlay de onboarding interceptando os cliques, o reCAPTCHA do Google apresentado duas vezes seguidas na mesma sessão e, por fim, um muro de login que exige identificação do cliente antes de exibir qualquer anúncio. As evidências fotográficas e os logs do terminal estão versionados na pasta evidencias/2026-10-08/ do repositório. Com a verificação automatizada inviabilizada empiricamente pela plataforma, o projeto ativou o cenário real do livreiro de canal único com controle manual de estoque, e o cross-channel passou a constar como Fase 2 do roadmap, condicionada à aprovação da API oficial do Mercado Livre. O script do piloto permanece no repositório como registro histórico, sem alteração, e a narrativa completa da decisão está documentada no README do projeto.
+      </p>
+
+      <div class="card-thesis" style="border-left-color: #38bdf8;">
+        <div class="card-thesis-title">Modelo Operacional Adotado</div>
+        <p style="margin:0;">
+          O projeto opera no modelo <strong>ESCRITA MANUAL / VERIFICAÇÃO AUTOMATIZADA</strong>. Todos os cenários, inclusive os erros propositais que demonstram a tese, são criados manualmente pelo analista. O Playwright atua como observador puro na vitrine pública da Estante Virtual, como um comprador: lê o estado visível dos anúncios (título, preço, contagem de fotos, descrição, presença ou ausência) e compara contra a Lista do Livreiro. Nenhum teste automatiza edição, pausa, venda ou login.
+        </p>
+      </div>
+    </section>
+
+    <!-- SEÇÃO 3 -->
+    <section id="sec-3" class="doc-section">
+      <h2 class="section-title"><span class="section-num">03.</span> Canal em escopo e Fase 2</h2>
+      <div class="doc-table-wrap">
+        <table class="doc-table">
+          <thead>
+            <tr>
+              <th style="width: 20%;">Canal</th>
+              <th style="width: 40%;">Papel no projeto</th>
+              <th style="width: 40%;">Observação operacional</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>Estante Virtual</strong></td>
+              <td>Canal principal e único da auditoria na v2.1; plataforma dedicada a livros usados, onde está a maior parte dos livreiros; define os padrões de foto do projeto</td>
+              <td>Não expõe API pública de vendedor; verificação exclusiva via interface. Login do painel do livreiro é simples (e-mail e senha), porém os cenários de escrita também são manuais, seguindo o modelo operacional.</td>
+            </tr>
+            <tr>
+              <td><strong>Mercado Livre</strong></td>
+              <td>Fase 2 do roadmap: cross-channel condicionado. Não integra a suíte executável da v2.1</td>
+              <td>A verificação automatizada foi bloqueada empiricamente por defesas anti-bot em camadas (achado ML-01, evidências versionadas). Liberável via API oficial quando o token for aprovado. Os custos de referência do ML ficam registrados nesta documentação como informação externa não auditada.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- SEÇÃO 4 -->
+    <section id="sec-4" class="doc-section">
+      <h2 class="section-title"><span class="section-num">04.</span> Base de custos e tarifas (requisitos para precificação)</h2>
+      <p>
+        Os valores abaixo são os parâmetros padrão adotados em todos os cálculos da Frente 2. Todo teste que envolver cálculo financeiro deve usar exclusivamente esta base.
+      </p>
+
+      <h3 style="font-size: 1.05rem; color: #38bdf8; margin: 1.25rem 0 0.5rem;">1. Custos operacionais do livreiro</h3>
+      <div class="doc-table-wrap">
+        <table class="doc-table">
+          <thead>
+            <tr>
+              <th>Elemento de custo</th>
+              <th>Valor padrão</th>
+              <th>Detalhamento</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Custo de aquisição por livro</td>
+              <td><strong>R$ 3,00</strong></td>
+              <td>Média de mercado entre <strong>R$ 1,00</strong> e <strong>R$ 5,00</strong>, valor fixado para padronizar os cálculos matemáticos da auditoria</td>
+            </tr>
+            <tr>
+              <td>Custo de embalagem e envio</td>
+              <td><strong>R$ 1,00</strong></td>
+              <td>Média ponderada entre envelope resistente, impressão de etiqueta e fita adesiva</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3 style="font-size: 1.05rem; color: #38bdf8; margin: 1.5rem 0 0.5rem;">2. Tarifas da Estante Virtual</h3>
+      <div class="doc-table-wrap">
+        <table class="doc-table">
+          <thead>
+            <tr>
+              <th>Faixa de catálogo</th>
+              <th>Valor mensal</th>
+              <th>Nome do plano</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Até 50 livros</td>
+              <td>Isento</td>
+              <td>Plano Coleção</td>
+            </tr>
+            <tr>
+              <td>51 a 500 livros</td>
+              <td><strong>R$ 29/mês</strong></td>
+              <td>Plano Livro</td>
+            </tr>
+            <tr style="background: rgba(6, 182, 212, 0.08);">
+              <td>501 a 2.000 livros</td>
+              <td><strong>R$ 69/mês</strong></td>
+              <td><strong>Plano Prateleira (PERFIL ADOTADO)</strong></td>
+            </tr>
+            <tr>
+              <td>2.001 a 20.000 livros</td>
+              <td><strong>R$ 124/mês</strong></td>
+              <td>Plano Estante</td>
+            </tr>
+            <tr>
+              <td>20.001 a 500.000 livros</td>
+              <td><strong>R$ 221/mês</strong></td>
+              <td>Plano Catálogo</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <p style="margin-top: 0.5rem; font-size: 0.9rem;">
+        <strong>Comissão por venda:</strong> <strong>17%</strong> fixo sobre o valor bruto do livro anunciado, sem custos adicionais por venda individual.
+      </p>
+
+      <div class="card-info">
+        <strong>Disclaimer gerencial:</strong> A faixa adotada é <strong>R$ 69/mês</strong> (501 a 2.000 livros), refletindo o perfil de pequena livraria independente. O rateio da mensalidade e as despesas de deslocamento até os Correios permanecem sem modelo de rateio unitário definido (ver pendências da Seção 12). Custos fixos estruturais do negócio (locação, contas, salários) não entram nos cálculos e devem ser citados como consideração gerencial no relatório.
+      </div>
+    </section>
+
+    <!-- SEÇÃO 5 -->
+    <section id="sec-5" class="doc-section">
+      <h2 class="section-title"><span class="section-num">05.</span> Régua de precificação (regras de negócio da Frente 2)</h2>
+      
+      <div class="rn-grid">
+        <div class="rn-card">
+          <span class="rn-badge">RN-01</span>
+          <p style="margin:0;">
+            O <strong>PREÇO MÍNIMO DE VENDA</strong> é <strong>R$ 19,00</strong> (política comercial do livreiro). Todo anúncio com preço inferior a <strong>R$ 19,00</strong> é classificado como DIVERGENTE da política e da Lista do Livreiro, salvo se estiver em promoção declarada (ver <strong>RN-03</strong>).
+          </p>
+        </div>
+
+        <div class="rn-card">
+          <span class="rn-badge">RN-02</span>
+          <p style="margin:0;">
+            A métrica apurada é o <strong>SALDO OPERACIONAL ANTES DE CUSTOS ADICIONAIS</strong>, e não lucro líquido: <em>Saldo = Preço − taxa da EV (17%) − aquisição (<strong>R$ 3,00</strong>) − embalagem (<strong>R$ 1,00</strong>)</em>, ou seja, <em>(0,83 × Preço) − 4,00</em>. Como a mensalidade de <strong>R$ 69,00</strong> e o deslocamento não possuem rateio unitário definido, este valor não pode ser rotulado como lucro líquido final. A meta comercial permanece: saldo superior a <strong>R$ 10,00</strong> por livro. Com os custos variáveis atuais, o ponto de equilíbrio matemático ocorreria em 4,00 / 0,83 ≈ <strong>R$ 4,82</strong>, abaixo do piso da massa de teste (<strong>R$ 7,00</strong>), o que fica registrado como pendência de modelagem financeira.
+          </p>
+        </div>
+
+        <div class="rn-card">
+          <span class="rn-badge">RN-03</span>
+          <p style="margin:0;">
+            <strong>DISCLAIMER DE PROMOÇÃO:</strong> anúncio abaixo de <strong>R$ 19,00</strong> pode constituir promoção intencional para giro de estoque parado. O QA sinaliza a divergência e o livreiro confirma se é promoção antes de qualquer ação corretiva. O QA não presume a promoção; a classificação é responsabilidade do dono.
+          </p>
+        </div>
+
+        <div class="rn-card">
+          <span class="rn-badge">RN-04</span>
+          <p style="margin:0;">
+            <strong>Métrica obrigatória:</strong> todo resultado de cálculo é expresso em reais por unidade vendida, segmentado por classificação (saldo superior a <strong>R$ 10,00</strong>, saldo positivo de até <strong>R$ 10,00</strong>, ou divergente de preço).
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <!-- SEÇÃO 6 -->
+    <section id="sec-6" class="doc-section">
+      <h2 class="section-title"><span class="section-num">06.</span> Regra de fotos e transparência visual (regras da Frente 3)</h2>
+      <p>
+        A Estante Virtual suporta até 4 fotos por anúncio, o que define o teto padrão do projeto.
+      </p>
+
+      <div class="rn-grid">
+        <div class="rn-card">
+          <span class="rn-badge">RN-05</span>
+          <p style="margin:0;">
+            Livro <strong>EM BOM ESTADO</strong> (sem avaria, rasura ou marcação): exatamente <strong>2 fotos</strong> (capa e contracapa), e a descrição informa o bom estado sem qualquer menção aos termos do dicionário de avarias.
+          </p>
+        </div>
+
+        <div class="rn-card">
+          <span class="rn-badge">RN-06</span>
+          <p style="margin:0;">
+            Livro <strong>COM AVARIA</strong>: exatamente <strong>4 fotos</strong>, sendo as 2 fotos extras obrigatoriamente evidências nítidas do defeito, e a avaria obrigatoriamente descrita nominalmente no texto do anúncio com o termo oficial do dicionário.
+          </p>
+        </div>
+
+        <div class="rn-card">
+          <span class="rn-badge">RN-07</span>
+          <p style="margin:0;">
+            Anúncio com <strong>1 foto</strong> ou <strong>3 fotos</strong> é <strong>ERRO DE PADRONIZAÇÃO</strong>, independentemente do conteúdo das fotos. A padronização admite exclusivamente <strong>2</strong> ou <strong>4 fotos</strong>.
+          </p>
+        </div>
+      </div>
+
+      <div class="card-info" style="margin-top: 1.25rem;">
+        <strong style="color:#38bdf8;">Método de verificação automatizada:</strong>
+        A validação da regra 2/4 é executada por leitura de texto e contagem de elementos: o script extrai a descrição do anúncio, pesquisa os termos do dicionário oficial de avarias e conta os nós de imagem da galeria pública. Termo de avaria presente exige estritamente 4 fotos; ausência total de termos exige estritamente 2 fotos; qualquer outra contagem (1 ou 3) é apontada como erro. Não há comparação de conteúdo de imagem (pixels), apenas contagem e presença.
+      </div>
+
+      <div class="card-alert">
+        <div class="card-alert-title">Regra crítica de escopo</div>
+        Testar o limite de upload da plataforma (forçar a 5ª foto na EV) é responsabilidade exclusiva do time de engenharia da Estante Virtual. Esta auditoria avalia a disciplina do livreiro no uso das regras, e não a infraestrutura da plataforma.
+      </div>
+
+      <p style="margin-top: 1rem;">
+        <strong>Justificativa de negócio:</strong> Anúncio que não evidencia avaria com precisão visual provoca mediações no SAC, devoluções forçadas com frete reverso imputado ao livreiro e avaliações negativas que degradam a reputação na plataforma. Transparência visual é blindagem direta de margem e faturamento.
+      </p>
+    </section>
+
+    <!-- SEÇÃO 7 -->
+    <section id="sec-7" class="doc-section">
+      <h2 class="section-title"><span class="section-num">07.</span> Dicionário de avarias (vocabulário oficial)</h2>
+      <p>
+        Os termos abaixo compõem o vocabulário oficial de detecção do projeto. Na execução da Frente 3, a presença de qualquer um destes termos na descrição caracteriza o anúncio como livro com avaria (aplicando a <strong>RN-06</strong>); a ausência total deles caracteriza anúncio de livro em bom estado (aplicando a <strong>RN-05</strong>). A presença isolada do termo não garante aprovação: o termo deve ser compatível com a avaria observada no exemplar físico.
+      </p>
+
+      <div class="tag-container">
+        <span class="term-tag">rasgado</span>
+        <span class="term-tag">rasgo</span>
+        <span class="term-tag">grifo</span>
+        <span class="term-tag">manchas</span>
+        <span class="term-tag">manchas amareladas</span>
+        <span class="term-tag">oxidação</span>
+        <span class="term-tag">lombada gasta</span>
+        <span class="term-tag">amarelado</span>
+        <span class="term-tag">rasura</span>
+        <span class="term-tag">linha sublinhada</span>
+        <span class="term-tag">sublinhação</span>
+        <span class="term-tag">marcação de texto</span>
+        <span class="term-tag">marcas de uso</span>
+        <span class="term-tag">marcas de manuseio</span>
+        <span class="term-tag">lombada danificada</span>
+        <span class="term-tag">fita adesiva</span>
+      </div>
+    </section>
+
+    <!-- SEÇÃO 8 -->
+    <section id="sec-8" class="doc-section">
+      <h2 class="section-title"><span class="section-num">08.</span> Lista do Livreiro (fonte da verdade)</h2>
+      <p>
+        A tabela a seguir apresenta os 21 títulos que compõem o catálogo controlado da livraria simulada. Cada registro possui um código unívoco (Nº do livro), usado ao longo de todas as frentes para garantir rastreabilidade entre a integridade física do acervo e os dados publicados na vitrine. Os títulos são fictícios para não interferir em anúncios reais de terceiros na plataforma; os ISBNs são reais para dar realismo técnico ao cadastro. O Livro 21 é massa exclusiva do TC-09 (anúncio faltante) e não é cadastrado na Estante Virtual.
+      </p>
+
+      <div class="card-info" style="border-left-color: #f59e0b;">
+        <strong style="color: #fbbf24;">Atenção à regra comercial:</strong>
+        A regra comercial definitiva de anúncio é o preço mínimo de <strong>R$ 19,00</strong>. Todos os valores inferiores desta massa (entre <strong>R$ 7,00</strong> e <strong>R$ 18,99</strong>) compõem massa de teste para verificação de limites, cálculo de rentabilidade e classificação de divergência, não devendo ser interpretados como precificação comercial viável.
+      </div>
+
+      <!-- Barra de Filtro / Busca da Tabela -->
+      <div class="table-filter-bar">
+        <input type="text" id="bookSearchInput" class="filter-input" placeholder="Filtrar por título, ISBN, estado, avaria ou uso..." oninput="filterBooks()">
+        <span class="filter-counter" id="bookCountLabel">Exibindo 21 de 21 títulos</span>
+      </div>
+
+      <div class="doc-table-wrap">
+        <table class="doc-table" id="booksTable">
+          <thead>
+            <tr>
+              <th style="width: 5%;">Nº</th>
+              <th style="width: 25%;">Título</th>
+              <th style="width: 15%;">ISBN</th>
+              <th style="width: 9%;">Preço</th>
+              <th style="width: 7%;">Qtd. Lista</th>
+              <th style="width: 7%;">Qtd. EV</th>
+              <th style="width: 10%;">Estado</th>
+              <th style="width: 14%;">Avarias</th>
+              <th style="width: 18%;">Uso em teste</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>1</strong></td>
+              <td>A Psicologia da Alquimia Financeira</td>
+              <td style="font-family:var(--font-mono);font-size:0.8rem;">978-65-55110-85-2</td>
+              <td><strong>R$ 19,00</strong></td>
+              <td>1</td>
+              <td>1</td>
+              <td>Bom estado</td>
+              <td>Nenhuma</td>
+              <td>Padrão de preço mínimo e 2 fotos</td>
+            </tr>
+            <tr>
+              <td><strong>2</strong></td>
+              <td>Verity: O Pergaminho da Verdade Maldita</td>
+              <td style="font-family:var(--font-mono);font-size:0.8rem;">978-65-59810-74-1</td>
+              <td><strong>R$ 18,99</strong></td>
+              <td>1</td>
+              <td>1</td>
+              <td>Com avaria</td>
+              <td>Rasgo, manchas amareladas</td>
+              <td>Teto da faixa de divergência; 4 fotos obrigatórias</td>
+            </tr>
+            <tr>
+              <td><strong>3</strong></td>
+              <td>A Hora da Estrela Cadente</td>
+              <td style="font-family:var(--font-mono);font-size:0.8rem;">978-85-32531-52-0</td>
+              <td><strong>R$ 14,99</strong></td>
+              <td>1</td>
+              <td>1</td>
+              <td>Bom estado</td>
+              <td>Nenhuma</td>
+              <td>Anúncio com apenas 1 foto</td>
+            </tr>
+            <tr>
+              <td><strong>4</strong></td>
+              <td>Nunca Minta para um Telepata</td>
+              <td style="font-family:var(--font-mono);font-size:0.8rem;">978-65-55656-15-2</td>
+              <td><strong>R$ 7,00</strong></td>
+              <td>1</td>
+              <td>1</td>
+              <td>Com avaria</td>
+              <td>Lombada gasta, fita adesiva</td>
+              <td>Piso da massa; simulação com 3 fotos</td>
+            </tr>
+            <tr>
+              <td><strong>5</strong></td>
+              <td>Hábitos Atômicos na Prática Nuclear</td>
+              <td style="font-family:var(--font-mono);font-size:0.8rem;">978-85-50813-05-9</td>
+              <td><strong>R$ 31,00</strong></td>
+              <td>1</td>
+              <td>1</td>
+              <td>Bom estado</td>
+              <td>Nenhuma</td>
+              <td>Consistência estrita de título e faixa alta</td>
+            </tr>
+            <tr>
+              <td><strong>6</strong></td>
+              <td>A Hipótese do Amor Quântico</td>
+              <td style="font-family:var(--font-mono);font-size:0.8rem;">978-65-55625-73-4</td>
+              <td><strong>R$ 19,00</strong></td>
+              <td>1</td>
+              <td>1</td>
+              <td>Bom estado</td>
+              <td>Nenhuma</td>
+              <td>Consistência estrita de preço</td>
+            </tr>
+            <tr>
+              <td><strong>7</strong></td>
+              <td>Eu Duvido Você Terminar Este Grimório</td>
+              <td style="font-family:var(--font-mono);font-size:0.8rem;">978-65-55324-17-4</td>
+              <td><strong>R$ 15,00</strong></td>
+              <td>1</td>
+              <td>1</td>
+              <td>Com avaria</td>
+              <td>Grifo, linha sublinhada</td>
+              <td>Omissão de avarias na descrição</td>
+            </tr>
+            <tr>
+              <td><strong>8</strong></td>
+              <td>Café com o Criador do Universo 2026</td>
+              <td style="font-family:var(--font-mono);font-size:0.8rem;">978-65-85932-15-8</td>
+              <td><strong>R$ 12,00</strong></td>
+              <td><strong>3</strong></td>
+              <td><strong>1</strong></td>
+              <td>Bom estado</td>
+              <td>Nenhuma</td>
+              <td>Divergência de estoque (3 físicos, 1 na EV)</td>
+            </tr>
+            <tr>
+              <td><strong>9</strong></td>
+              <td>Melhor que nos Holofilmes</td>
+              <td style="font-family:var(--font-mono);font-size:0.8rem;">978-65-55605-77-8</td>
+              <td><strong>R$ 35,00</strong></td>
+              <td>1</td>
+              <td><strong>0</strong></td>
+              <td>Bom estado</td>
+              <td>Nenhuma</td>
+              <td>Venda fantasma; anúncio deve estar desativado</td>
+            </tr>
+            <tr>
+              <td><strong>10</strong></td>
+              <td>A Cabeça do Golem Santo</td>
+              <td style="font-family:var(--font-mono);font-size:0.8rem;">978-85-35923-88-9</td>
+              <td><strong>R$ 22,00</strong></td>
+              <td>1</td>
+              <td>1</td>
+              <td>Bom estado</td>
+              <td>Nenhuma</td>
+              <td>Composição amostral da faixa acima do mínimo</td>
+            </tr>
+            <tr>
+              <td><strong>11</strong></td>
+              <td>Patinando no Gelo de Europa</td>
+              <td style="font-family:var(--font-mono);font-size:0.8rem;">978-65-55098-82-0</td>
+              <td><strong>R$ 18,00</strong></td>
+              <td>1</td>
+              <td>1</td>
+              <td>Bom estado</td>
+              <td>Nenhuma</td>
+              <td>Faixa intermediária abaixo do mínimo</td>
+            </tr>
+            <tr>
+              <td><strong>12</strong></td>
+              <td>O Massacre da Dinastia Hope</td>
+              <td style="font-family:var(--font-mono);font-size:0.8rem;">978-65-55657-04-3</td>
+              <td><strong>R$ 45,00</strong></td>
+              <td>1</td>
+              <td>1</td>
+              <td>Com avaria</td>
+              <td>Oxidação, manchas amareladas</td>
+              <td>Falha estrutural com 3 fotos em livro de alto valor</td>
+            </tr>
+            <tr>
+              <td><strong>13</strong></td>
+              <td>Quando os Deuses Choram</td>
+              <td style="font-family:var(--font-mono);font-size:0.8rem;">978-65-84515-39-0</td>
+              <td><strong>R$ 14,00</strong></td>
+              <td>1</td>
+              <td>1</td>
+              <td>Bom estado</td>
+              <td>Nenhuma</td>
+              <td>Faixa de precificação reduzida</td>
+            </tr>
+            <tr>
+              <td><strong>14</strong></td>
+              <td>O Mago Mais Rico da Babilônia</td>
+              <td style="font-family:var(--font-mono);font-size:0.8rem;">978-85-95081-53-6</td>
+              <td><strong>R$ 7,42</strong></td>
+              <td>1</td>
+              <td>1</td>
+              <td>Bom estado</td>
+              <td>Nenhuma</td>
+              <td>Preço com centavos e margem mínima variável</td>
+            </tr>
+            <tr>
+              <td><strong>15</strong></td>
+              <td>A Biblioteca do Multiverso da Meia-Noite</td>
+              <td style="font-family:var(--font-mono);font-size:0.8rem;">978-65-55871-92-0</td>
+              <td><strong>R$ 19,00</strong></td>
+              <td>1</td>
+              <td>1</td>
+              <td>Bom estado</td>
+              <td>Nenhuma</td>
+              <td>Conformidade com preço limítrofe</td>
+            </tr>
+            <tr>
+              <td><strong>16</strong></td>
+              <td>A Androide de Limpeza</td>
+              <td style="font-family:var(--font-mono);font-size:0.8rem;">978-65-55654-72-1</td>
+              <td><strong>R$ 28,00</strong></td>
+              <td>1</td>
+              <td>1</td>
+              <td>Com avaria</td>
+              <td>Rasura, marcação de texto</td>
+              <td>Recebe fotos do Livro 17 (teste de troca de fotos)</td>
+            </tr>
+            <tr>
+              <td><strong>17</strong></td>
+              <td>Vidas Secas sob os Dois Sóis</td>
+              <td style="font-family:var(--font-mono);font-size:0.8rem;">978-85-01013-07-0</td>
+              <td><strong>R$ 17,50</strong></td>
+              <td>1</td>
+              <td>1</td>
+              <td>Bom estado</td>
+              <td>Nenhuma</td>
+              <td>Exemplar íntegro doador de fotos para o teste de troca</td>
+            </tr>
+            <tr>
+              <td><strong>18</strong></td>
+              <td>Torto Arado de Almas</td>
+              <td style="font-family:var(--font-mono);font-size:0.8rem;">978-85-11003-11-6</td>
+              <td><strong>R$ 32,00</strong></td>
+              <td>1</td>
+              <td>1</td>
+              <td>Com avaria</td>
+              <td>Amarelado, marcas de manuseio</td>
+              <td>Omissão parcial (descreve apenas o amarelado)</td>
+            </tr>
+            <tr>
+              <td><strong>19</strong></td>
+              <td>Banquete Secreto</td>
+              <td style="font-family:var(--font-mono);font-size:0.8rem;">978-85-35928-40-2</td>
+              <td><strong>R$ 13,00</strong></td>
+              <td>1</td>
+              <td>1</td>
+              <td>Bom estado</td>
+              <td>Nenhuma</td>
+              <td>Subfaixa de <strong>R$ 12,00</strong> a <strong>R$ 14,99</strong></td>
+            </tr>
+            <tr>
+              <td><strong>20</strong></td>
+              <td>A Metamorfose do Insetóide Cósmico</td>
+              <td style="font-family:var(--font-mono);font-size:0.8rem;">978-85-35926-44-6</td>
+              <td><strong>R$ 25,00</strong></td>
+              <td>1</td>
+              <td>1</td>
+              <td>Bom estado</td>
+              <td>Nenhuma</td>
+              <td>Composição amostral de rentabilidade</td>
+            </tr>
+            <tr>
+              <td><strong>21</strong></td>
+              <td>O Jardim das Lanternas Apagadas</td>
+              <td style="font-family:var(--font-mono);font-size:0.8rem;color:#f59e0b;">[A preencher com ISBN real]</td>
+              <td><strong>R$ 21,00</strong></td>
+              <td>1</td>
+              <td><strong>0</strong> (não cadastrado)</td>
+              <td>Bom estado</td>
+              <td>Nenhuma</td>
+              <td>Massa exclusiva do TC-09: consta na lista e NUNCA é cadastrado na EV</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3 style="font-size: 1.1rem; color: #f1f5f9; margin: 1.75rem 0 0.75rem;">Resumo estatístico da massa</h3>
+      <div class="stats-summary">
+        <div class="stat-card">
+          <div class="val">21</div>
+          <div class="lbl">Títulos totais na Lista do Livreiro</div>
+        </div>
+        <div class="stat-card">
+          <div class="val">23</div>
+          <div class="lbl">Exemplares físicos na lista (Livro 8 tem 3 un.)</div>
+        </div>
+        <div class="stat-card">
+          <div class="val">19</div>
+          <div class="lbl">Unidades ativas na Estante Virtual</div>
+        </div>
+        <div class="stat-card">
+          <div class="val">Δ = 3</div>
+          <div class="lbl">Diferença física no TC-08 (22 físicas vs 19 na EV)</div>
+        </div>
+      </div>
+
+      <div class="card-info" style="font-size: 0.88rem;">
+        <p style="margin: 0 0 0.5rem 0;">
+          <strong>Nota sobre o TC-08:</strong> O TC-08 (total de exemplares) considera exclusivamente os Livros 1 a 20: 22 unidades físicas contra 19 unidades na EV, diferença de exatamente 3 unidades. O Livro 21 é massa exclusiva do TC-09.
+        </p>
+        <p style="margin: 0 0 0.5rem 0;">
+          <strong>Distribuição por faixa de preço:</strong> 11 títulos a <strong>R$ 19,00</strong> ou mais (Livros 1, 5, 6, 9, 10, 12, 15, 16, 18, 20 e 21); 4 títulos entre <strong>R$ 15,00</strong> e <strong>R$ 18,99</strong> (Livros 2, 7, 11 e 17); 4 títulos entre <strong>R$ 12,00</strong> e <strong>R$ 14,99</strong> (Livros 3, 8, 13 e 19); 2 títulos entre <strong>R$ 7,00</strong> e <strong>R$ 11,99</strong> (Livros 4 e 14); 4 títulos acima de <strong>R$ 30,00</strong> (Livros 5, 9, 12 e 18).
+        </p>
+        <p style="margin: 0;">
+          <strong>Distribuição por estado físico:</strong> 15 títulos em bom estado e 6 títulos com avaria documentada (Livros 2, 4, 7, 12, 16 e 18).
+        </p>
+      </div>
+    </section>
+
+    <!-- SEÇÃO 9 -->
+    <section id="sec-9" class="doc-section">
+      <h2 class="section-title"><span class="section-num">09.</span> Requisitos consolidados das frentes</h2>
+      <div class="doc-table-wrap">
+        <table class="doc-table">
+          <thead>
+            <tr>
+              <th style="width: 25%;">Frente de teste</th>
+              <th style="width: 45%;">Objetivo central</th>
+              <th style="width: 15%;">Faixa de testes</th>
+              <th style="width: 15%;">Regras aplicáveis</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>Frente 1: Conferência de estoque</strong></td>
+              <td>Verificar consistência entre a Lista do Livreiro (fonte da verdade) e a estante/vitrine virtual: existência, título, preço, descrição, volumetria de fotos, estoque por título, venda fantasma e total de exemplares</td>
+              <td><strong>TC-01 a TC-09</strong></td>
+              <td><strong>RN-05</strong>, <strong>RN-06</strong>, <strong>RN-07</strong></td>
+            </tr>
+            <tr>
+              <td><strong>Frente 2: Precificação e lucro</strong></td>
+              <td>Classificar cada anúncio conforme a régua de <strong>R$ 19,00</strong> e apurar o saldo operacional por unidade com a base de custos da Seção 4</td>
+              <td><strong>TC-10 a TC-15</strong></td>
+              <td><strong>RN-01 a RN-04</strong></td>
+            </tr>
+            <tr>
+              <td><strong>Frente 3: Fotos, avarias e transparência visual</strong></td>
+              <td>Validar a regra rígida de fotos (exclusivamente 2 ou 4), a assertividade na descrição da avaria e a integridade visual dos anúncios</td>
+              <td><strong>TC-16 a TC-23</strong></td>
+              <td><strong>RN-05 a RN-07</strong></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- SEÇÃO 10 -->
+    <section id="sec-10" class="doc-section">
+      <h2 class="section-title"><span class="section-num">10.</span> Fluxo de ferramentas e evidências</h2>
+      <div class="doc-table-wrap">
+        <table class="doc-table">
+          <thead>
+            <tr>
+              <th style="width: 25%;">Ferramenta</th>
+              <th style="width: 75%;">Responsabilidade operacional</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>Playwright</strong></td>
+              <td>Coleta e validação automatizada de leitura na vitrine pública da Estante Virtual; geração sistemática de screenshots como evidência. Nenhum script realiza login, edição, pausa ou compra.</td>
+            </tr>
+            <tr>
+              <td><strong>Google Sheets</strong></td>
+              <td>Matriz consolidada de casos de teste, cadastro da base de custos, fórmulas paramétricas de cálculo do saldo operacional e consolidação estatística dos resultados. Regra de ouro: preço digita-se (coletado), saldo calcula-se (fórmula).</td>
+            </tr>
+            <tr>
+              <td><strong>Jira</strong></td>
+              <td>Registro formal de todo achado classificado como FALHO, com descrição padronizada, passos para reprodução e evidência em screenshot anexada.</td>
+            </tr>
+            <tr>
+              <td><strong>GitHub</strong></td>
+              <td>Versionamento estruturado dos scripts de automação, das evidências e dos artefatos de documentação técnica.</td>
+            </tr>
+            <tr>
+              <td><strong>HTML (documentos do projeto)</strong></td>
+              <td>Fonte única de verdade das regras de negócio e camada de apresentação executiva navegável.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- SEÇÃO 11 -->
+    <section id="sec-11" class="doc-section">
+      <h2 class="section-title"><span class="section-num">11.</span> Fora do escopo da auditoria</h2>
+      <ol class="doc-list">
+        <li>
+          <strong>Teste do limite de upload de fotos da plataforma:</strong> responsabilidade dos times internos de produto e QA da Estante Virtual.
+        </li>
+        <li>
+          <strong>Validações de campos de entrada nas interfaces da plataforma (limites de caracteres em títulos):</strong> competem à engenharia do marketplace.
+        </li>
+        <li>
+          <strong>Race condition de checkouts simultâneos:</strong> sem API transacional pública para forçar locks concorrentes, o cenário não é executável de forma determinística; permanece registrado como risco operacional.
+        </li>
+        <li>
+          <strong>Teste do comportamento interno da Estante Virtual:</strong> o objeto estrito da auditoria é a saúde operacional e a integridade de catálogo do SEBO, não o comportamento dos microsserviços da plataforma.
+        </li>
+        <li>
+          <strong>Verificação automatizada no Mercado Livre:</strong> bloqueada empiricamente por defesas anti-bot em camadas (achado ML-01); o canal retorna como Fase 2 condicionada à API oficial.
+        </li>
+      </ol>
+    </section>
+
+    <!-- SEÇÃO 12 -->
+    <section id="sec-12" class="doc-section">
+      <h2 class="section-title"><span class="section-num">12.</span> Pendências de confirmação do negócio</h2>
+      <ol class="doc-list">
+        <li>
+          Definir o rateio da mensalidade de <strong>R$ 69,00</strong> por livro ou por venda.
+        </li>
+        <li>
+          Confirmar se e como o deslocamento até os Correios entra no custo por venda.
+        </li>
+        <li>
+          Validar o break-even definitivo com a fórmula completa (a estimativa atual com custos variáveis é <strong>R$ 4,82</strong>, abaixo do piso da massa).
+        </li>
+        <li>
+          Confirmar que os percentuais e taxas correspondem ao plano vigente da plataforma antes do uso operacional do documento.
+        </li>
+        <li>
+          Preencher o ISBN real do Livro 21 antes do início dos cadastros.
+        </li>
+      </ol>
+    </section>
+
+    <!-- Rodapé -->
+    <footer class="doc-footer">
+      <p style="margin: 0 0 0.35rem 0;">
+        Projeto PAC (TripleTen Brasil) | Auditoria de QA aplicada a sebos e livrarias independentes
+      </p>
+      <p style="margin: 0;">
+        Documento de Requisitos e Regras de Negócio, versão 2.1, outubro/2026 | Par do documento: Plano de Testes v2.1 (TC-01 a TC-23)
+      </p>
+    </footer>
+
+  </div>
+
+  <script>
+    // Filtro interativo para consulta rápida na tabela de livros
+    function filterBooks() {
+      const query = document.getElementById('bookSearchInput').value.toLowerCase().trim();
+      const rows = document.querySelectorAll('#booksTable tbody tr');
+      let visibleCount = 0;
+
+      rows.forEach(row => {
+        const text = row.innerText.toLowerCase();
+        if (text.includes(query)) {
+          row.style.display = '';
+          visibleCount++;
+        } else {
+          row.style.display = 'none';
+        }
+      });
+
+      const label = document.getElementById('bookCountLabel');
+      if (label) {
+        label.textContent = `Exibindo ${visibleCount} de ${rows.length} títulos`;
+      }
+    }
+  </script>
+<script>
+/* Skip artifact shell — fixed helpers served beside every artifact. */
+(function () {
+  "use strict";
+
+  var fmt = {
+    num: function (v, opts) { return new Intl.NumberFormat("pt-BR", opts || {}).format(v); },
+    brl: function (v) { return new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(v); },
+    pct: function (v) { return new Intl.NumberFormat("pt-BR", { style: "percent", maximumFractionDigits: 1 }).format(v); }
+  };
+
+  // axisFmt keeps axis tick labels short (compact notation) so long values
+  // (e.g. full BRL amounts) never clip against the plot edge.
+  function axisFmt(v) {
+    return fmt.num(v, { notation: "compact", maximumFractionDigits: 1 });
+  }
+
+  // format accepts a function OR one of the fmt names ("num" | "brl" | "pct").
+  function coerceFormat(spec) {
+    if (typeof spec === "function") return spec;
+    if (typeof spec === "string" && fmt[spec]) return fmt[spec];
+    return function (v) { return fmt.num(v); };
+  }
+
+  function accent() {
+    return getComputedStyle(document.documentElement).getPropertyValue("--accent").trim() || "#2563eb";
+  }
+  function mutedColor() {
+    return getComputedStyle(document.documentElement).getPropertyValue("--text-muted").trim() || "#5b6472";
+  }
+  function svgEl(tag, attrs) {
+    var el = document.createElementNS("http://www.w3.org/2000/svg", tag);
+    for (var k in attrs) el.setAttribute(k, attrs[k]);
+    return el;
+  }
+  function frame(el, w, h) {
+    var svg = svgEl("svg", { viewBox: "0 0 " + w + " " + h, role: "img" });
+    el.innerHTML = "";
+    el.appendChild(svg);
+    return svg;
+  }
+
+  // maxOf guards the axis scale: empty values would give -Infinity (truthy,
+  // so "|| 1" can't catch it) and a non-positive max would flip the chart.
+  function maxOf(values) {
+    var m = values.length ? Math.max.apply(null, values) : 0;
+    return m > 0 ? m : 1;
+  }
+
+  // bar(el, {labels:[], values:[], color?, format?}) — vertical bar chart.
+  function bar(el, cfg) {
+    var W = 640, H = 280, padL = 46, padB = 30, padT = 12;
+    var svg = frame(el, W, H);
+    var max = maxOf(cfg.values);
+    var n = cfg.values.length;
+    var plotW = W - padL - 12, plotH = H - padT - padB;
+    var step = plotW / n, bw = Math.min(step * 0.62, 64);
+    var color = cfg.color || accent();
+    var f = coerceFormat(cfg.format);
+    for (var g = 0; g <= 4; g++) {
+      var gy = padT + plotH - (plotH * g) / 4;
+      svg.appendChild(svgEl("line", { x1: padL, y1: gy, x2: W - 12, y2: gy, stroke: "currentColor", "stroke-opacity": 0.08 }));
+      var lbl = svgEl("text", { x: padL - 8, y: gy + 4, "text-anchor": "end", "font-size": 10, fill: mutedColor() });
+      lbl.textContent = axisFmt((max * g) / 4);
+      svg.appendChild(lbl);
+    }
+    cfg.values.forEach(function (v, i) {
+      var bh = Math.max(0, (v / max) * plotH);
+      var x = padL + i * step + (step - bw) / 2;
+      var y = padT + plotH - bh;
+      var r = svgEl("rect", { x: x, y: y, width: bw, height: bh, rx: 4, fill: color });
+      var t = svgEl("title", {});
+      t.textContent = cfg.labels[i] + ": " + f(v);
+      r.appendChild(t);
+      svg.appendChild(r);
+      var tx = svgEl("text", { x: x + bw / 2, y: H - 10, "text-anchor": "middle", "font-size": 11, fill: mutedColor() });
+      tx.textContent = cfg.labels[i];
+      svg.appendChild(tx);
+    });
+  }
+
+  // line(el, {labels:[], values:[], color?, format?}) — single-series line.
+  function line(el, cfg) {
+    var W = 640, H = 280, padL = 46, padB = 30, padT = 12;
+    var svg = frame(el, W, H);
+    var max = maxOf(cfg.values);
+    var n = cfg.values.length;
+    var plotW = W - padL - 16, plotH = H - padT - padB;
+    var color = cfg.color || accent();
+    var f = coerceFormat(cfg.format);
+    for (var g = 0; g <= 4; g++) {
+      var gy = padT + plotH - (plotH * g) / 4;
+      svg.appendChild(svgEl("line", { x1: padL, y1: gy, x2: W - 16, y2: gy, stroke: "currentColor", "stroke-opacity": 0.08 }));
+      var lbl = svgEl("text", { x: padL - 8, y: gy + 4, "text-anchor": "end", "font-size": 10, fill: mutedColor() });
+      lbl.textContent = axisFmt((max * g) / 4);
+      svg.appendChild(lbl);
+    }
+    var pts = cfg.values.map(function (v, i) {
+      var x = padL + (n === 1 ? plotW / 2 : (plotW * i) / (n - 1));
+      var y = padT + plotH - (v / max) * plotH;
+      return [x, y];
+    });
+    var d = pts.map(function (p, i) { return (i ? "L" : "M") + p[0].toFixed(1) + " " + p[1].toFixed(1); }).join(" ");
+    svg.appendChild(svgEl("path", { d: d, fill: "none", stroke: color, "stroke-width": 2, "stroke-linejoin": "round" }));
+    pts.forEach(function (p, i) {
+      var c = svgEl("circle", { cx: p[0], cy: p[1], r: 3.5, fill: color });
+      var t = svgEl("title", {});
+      t.textContent = cfg.labels[i] + ": " + f(cfg.values[i]);
+      c.appendChild(t);
+      svg.appendChild(c);
+      var tx = svgEl("text", { x: p[0], y: H - 10, "text-anchor": "middle", "font-size": 11, fill: mutedColor() });
+      tx.textContent = cfg.labels[i];
+      svg.appendChild(tx);
+    });
+  }
+
+  // donut(el, {labels:[], values:[], colors?}) — donut with center total.
+  function donut(el, cfg) {
+    var W = 320, H = 280, cx = W / 2, cy = H / 2, R = 92, r = 58;
+    var svg = frame(el, W, H);
+    var total = cfg.values.reduce(function (a, b) { return a + b; }, 0) || 1;
+    var palette = cfg.colors || [accent(), "#1baf7a", "#eda100", "#e34948", "#4a3aa7", "#e87ba4"];
+    var a0 = -Math.PI / 2;
+    cfg.values.forEach(function (v, i) {
+      var a1 = a0 + (v / total) * Math.PI * 2;
+      var large = a1 - a0 > Math.PI ? 1 : 0;
+      var p = ["M", cx + R * Math.cos(a0), cy + R * Math.sin(a0),
+        "A", R, R, 0, large, 1, cx + R * Math.cos(a1), cy + R * Math.sin(a1),
+        "L", cx + r * Math.cos(a1), cy + r * Math.sin(a1),
+        "A", r, r, 0, large, 0, cx + r * Math.cos(a0), cy + r * Math.sin(a0), "Z"].join(" ");
+      var path = svgEl("path", { d: p, fill: palette[i % palette.length] });
+      var t = svgEl("title", {});
+      t.textContent = cfg.labels[i] + ": " + fmt.num(v) + " (" + fmt.pct(v / total) + ")";
+      path.appendChild(t);
+      svg.appendChild(path);
+      a0 = a1;
+    });
+    var center = svgEl("text", { x: cx, y: cy + 5, "text-anchor": "middle", "font-size": 20, "font-weight": 650, fill: "currentColor" });
+    center.textContent = fmt.num(total);
+    svg.appendChild(center);
+  }
+
+  window.skipShell = { fmt: fmt };
+  window.skipChart = { bar: bar, line: line, donut: donut };
+})();
+
+</script>
+</body>
+</html>
