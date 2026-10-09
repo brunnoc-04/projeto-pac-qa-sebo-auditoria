@@ -44,7 +44,7 @@ Com a verificação automatizada inviabilizada empiricamente pela plataforma, o 
 | F3 — Fotos e avarias | Régua 2/4 fotos, dicionário de avarias e transparência visual | TC-16 a TC-23 | Em execução |
 | Fase 2 — API (Mercado Livre) | Comparação página vs API (preço, status, fotos) | TC-27 a TC-29 (v2.0) | ⚠️ Condicionada ao token da API oficial |
 
-**📚 Documentação:** [Documentação de Requisitos v2.1](docs/requisitos-v2.1.html) | [Plano de Testes v2.1](docs/plano-de-testes-v2.1.html)
+**📚 Documentação:** [Documentação de Requisitos v2.1](https://brunnoc-04.github.io/projeto-pac-qa-sebo-auditoria/requisitos-v2.1.html) | [Plano de Testes v2.1](https://brunnoc-04.github.io/projeto-pac-qa-sebo-auditoria/plano-de-testes-v2.1.html)
 
 ## 🛠️ Stack
 
