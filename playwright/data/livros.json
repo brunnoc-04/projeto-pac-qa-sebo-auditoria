@@ -1,17 +1,15 @@
 {
   "vitrine_ev": "https://www.estantevirtual.com.br/sebos-e-livreiros/e-o-bento-levou?sellerId=1003616",
   "livros": [
-    {
-      "id": "L-01",
-      "titulo": "Jogos Vorazes Volume 1",
-      "fotos_esperadas": 2,
-      "url_ml": "https://produto.mercadolivre.com.br/MLB-7748360720?matt_tool=38524122&ua=YcaU7E7OiKxj0nX-AIGPxOjX_7U9aTwSE4XtFC2Q6nSKDRRz#origin=share&sid=share&action=copy"
-    },
-    {
-      "id": "L-02",
-      "titulo": "Harry Potter e a Pedra Filosofal - Rowling, J. K. - Rocco - Capa Mole",
-      "fotos_esperadas": 2,
-      "url_ml": "https://produto.mercadolivre.com.br/MLB-5333099495?matt_tool=38524122&ua=uZ6Zdrjr1vm-Mfg-uita01JO4V3UPfscQr5kf7NV1JfOpxl6#origin=share&sid=share&action=copy"
-    }
+    { "id": "L-01", "titulo": "A Psicologia da Alquimia Financeira", "preco": 25.00, "na_lista": true },
+    { "id": "L-05", "titulo": "Hábitos Atômicos na Prática Nuclear", "preco": 22.00, "na_lista": true },
+    { "id": "L-06", "titulo": "A Hipótese do Amor Quântico", "preco": 19.00, "na_lista": true },
+    { "id": "L-08", "titulo": "Café com o Criador do Universo 2026", "preco": 12.00, "na_lista": true, "obs": "3 fisicos na lista, 1 na EV" },
+    { "id": "L-09", "titulo": "Melhor que nos Holofilmes", "preco": 21.00, "na_lista": true, "obs": "esgotado para o TC-07" },
+    { "id": "L-10", "titulo": "A Cabeça do Golem Santo", "preco": 19.50, "na_lista": true, "obs": "setup: recebe rasgado na descricao" },
+    { "id": "L-21", "titulo": "O Jardim das Lanternas Apagadas", "preco": 23.00, "na_lista": true, "obs": "nao cadastrado na EV" },
+    { "id": "L-22", "titulo": "O Aprendiz da Torre das Sete Chaves", "preco": 19.00, "na_lista": false, "obs": "anuncio fantasma" },
+    { "id": "L-04", "titulo": "Nunca Minta para um Telepata", "preco": 7.00, "na_lista": true },
+    { "id": "L-14", "titulo": "O Mago Mais Rico da Babilônia", "preco": 7.42, "na_lista": true }
   ]
 }

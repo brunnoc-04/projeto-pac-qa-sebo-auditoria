@@ -64,6 +64,43 @@ Com a verificação automatizada inviabilizada empiricamente pela plataforma, o 
 - **Fotos:** 2 = bom estado • 4 = avaria evidenciada e descrita • 1 ou 3 = ERRO
 - **Dicionário de avarias:** rasgo, grifo, mancha, oxidação, lombada gasta, amarelado, rasura, sublinhação, marcação de texto
 
+## 🧩 Casos adicionais: registro de decisão (TC-24 e TC-25)
+
+Dois casos foram acrescentados à suíte em 10/10/2026, fora do escopo descrito
+no Plano de Testes v2.1, em consequência de um achado de plataforma identificado
+durante a execução da Frente 1. Como o plano não os descreve integralmente,
+este README é o registro formal deles — o que o Sheets testa, este README explica.
+
+* **TC-24 — Piso de R$ 12,00 da plataforma (valor limite):** os Livros 4
+  ("Nunca Minta para um Telepata", R$ 7,00) e 14 ("O Mago Mais Rico da
+  Babilônia", R$ 7,42) constam na Lista do Livreiro, mas suas buscas retornam
+  vazias na vitrine: abaixo do piso de R$ 12,00, o anúncio fica invisível para
+  o comprador. O limiar é inclusivo — exatamente R$ 12,00 é exibido; abaixo
+  disso, oculto. O comportamento é da plataforma (achado EV-01), não do
+  livreiro, e orienta a precificação futura: anúncios precisam de R$ 12,00
+  ou mais para existirem publicamente — piso que se sobrepõe ao mínimo de
+  venda de R$ 19,00 do dono.
+
+
+* **TC-25 — Anúncio fantasma (partição de equivalência):** o título
+  "O Aprendiz da Torre das Sete Chaves" está publicado na vitrine (R$ 19,00)
+  e não consta na Lista do Livreiro. O caso representa a partição "está na
+  vitrine e não consta na lista" e demonstra o risco central da auditoria:
+  venda de produto sem lastro no controle do livreiro.
+
+## 📷 Caso migrado: registro de decisão (TC-05)
+
+O TC-05 ("Volumetria de fotos por estado") não aparece na Frente 1: foi
+mesclado à Frente 3 (Fotos e avarias), com a cobertura transferida para os
+casos TC-16 e TC-17, e fica registrado no Sheets com status NA, preservando
+a numeração contínua do plano. A decisão se sustenta em dois pontos: a massa
+da vitrine conta com apenas 1 anúncio com mais de uma foto, de modo que uma
+volumetria no nível da vitrine testaria um único espécime, sem valor
+auditorável; e a régua de fotos (2 = bom estado • 4 = avaria evidenciada e
+descrita • 1 ou 3 = ERRO) é verificada anúncio por anúncio na Frente 3, com
+os locators de carrossel calibrados para essa leitura — o mesmo bloco que a
+Frente 1 passou a reutilizar na expansão de descrição.
+
 ## 🗂️ Estrutura do repositório
 
     docs/          → documentação v2.1 (requisitos, plano de testes)
