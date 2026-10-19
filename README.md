@@ -101,7 +101,7 @@ descrita • 1 ou 3 = ERRO) é verificada anúncio por anúncio na Frente 3, com
 os locators de carrossel calibrados para essa leitura — o mesmo bloco que a
 Frente 1 passou a reutilizar na expansão de descrição.
 
-## 💰 Frente 2 — registro de decisão (TC-10 a TC-15 e TC-26)**
+## 💰 Frente 2 — registro de decisão (TC-10 a TC-15 e TC-26)
 
 A Frente 2 (precificação e rentabilidade) foi reformulada em 10/10/2026 durante a
 revisão da suíte, e o Google Sheets passou a ser a fonte final dos casos — o Plano
