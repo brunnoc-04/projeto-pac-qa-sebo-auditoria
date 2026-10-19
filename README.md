@@ -101,6 +101,32 @@ descrita • 1 ou 3 = ERRO) é verificada anúncio por anúncio na Frente 3, com
 os locators de carrossel calibrados para essa leitura — o mesmo bloco que a
 Frente 1 passou a reutilizar na expansão de descrição.
 
+## 💰 Frente 2 — registro de decisão (TC-10 a TC-15 e TC-26)**
+
+A Frente 2 (precificação e rentabilidade) foi reformulada em 10/10/2026 durante a
+revisão da suíte, e o Google Sheets passou a ser a fonte final dos casos — o Plano
+de Testes v2.1 permanece como registro histórico. Três decisões definem a frente:
+
+* **TC-15 (Classificação individual de saldo) ficou NA:** o caso original exigia a
+  varredura de todas as linhas da lista, com resultado ambíguo. A cobertura foi
+  redistribuída — a classificação individual agora é exercida pelos casos de livro
+  específico (TC-10 a TC-13) e a régua completa pelas contagens (TC-14 e TC-26).
+  O ID foi preservado para não renumerar a suíte.
+
+
+* **TC-26 foi criado** (contagem de títulos abaixo de R$ 19,00) para fechar a
+  partição da régua de preços em par com o TC-14: 11 títulos a partir de R$ 19,00,
+  10 abaixo — os contados representam, por definição, violações do mínimo de venda
+  (salvo promoção declarada, RN-03).
+
+
+* **TC-10, TC-11 e TC-12 foram reescritos** para um representante por faixa de
+  preço (Livros 20, 11 e 8): o Playwright aplica o filtro de preço na vitrine e
+  confere o preço exibido contra a Lista; a planilha registra o valor e confere o
+  lucro pela fórmula (0,83 × preço − R$ 4,00). Violações do mínimo de venda (RN-01)
+  vão para o Jira com a ressalva da RN-03. A subfaixa abaixo de R$ 12,00 permanece
+  coberta pelo TC-24 (achado de plataforma EV-01).
+
 ## 🗂️ Estrutura do repositório
 
     docs/          → documentação v2.1 (requisitos, plano de testes)

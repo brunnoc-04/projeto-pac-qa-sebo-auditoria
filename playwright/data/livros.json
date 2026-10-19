@@ -10,6 +10,8 @@
     { "id": "L-21", "titulo": "O Jardim das Lanternas Apagadas", "preco": 23.00, "na_lista": true, "obs": "nao cadastrado na EV" },
     { "id": "L-22", "titulo": "O Aprendiz da Torre das Sete Chaves", "preco": 19.00, "na_lista": false, "obs": "anuncio fantasma" },
     { "id": "L-04", "titulo": "Nunca Minta para um Telepata", "preco": 7.00, "na_lista": true },
-    { "id": "L-14", "titulo": "O Mago Mais Rico da Babilônia", "preco": 7.42, "na_lista": true }
+    { "id": "L-14", "titulo": "O Mago Mais Rico da Babilônia", "preco": 7.42, "na_lista": true },
+    { "id": "L-20", "titulo": "A Metamorfose do Insetóide Cósmico", "preco": 25.00, "na_lista": true },
+    { "id": "L-11", "titulo": "Patinando no Gelo de Europa", "preco": 18.00, "na_lista": true }
   ]
 }
