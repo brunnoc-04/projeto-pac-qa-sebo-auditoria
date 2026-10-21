@@ -1,0 +1,112 @@
+{
+  "frente": 3,
+  "data": "2026-10-20",
+  "vitrine_ev": "https://www.estantevirtual.com.br/sebos-e-livreiros/e-o-bento-levou?sellerId=1003616",
+  "regua_fotos": {
+    "bom_estado": 2,
+    "avariado": 4,
+    "erro_padronizacao": [1, 3],
+    "nota": "Avariados: termo do dicionario na descricao + fotos extras evidenciando o defeito"
+  },
+  "livros": [
+    {
+      "id": "L-1",
+      "titulo": "A Psicologia da Alquimia Financeira",
+      "estado": "bom",
+      "avarias_lista": "",
+      "preco": 19.00,
+      "fotos_regua": 2,
+      "fotos_anunciadas": 2,
+      "caso": "TC-16",
+      "papel": "positivo: conforme a regua (2 fotos, descricao sem termos do dicionario)"
+    },
+    {
+      "id": "L-2",
+      "titulo": "Verity: O Pergaminho da Verdade Maldita",
+      "estado": "avariado",
+      "avarias_lista": "rasgo na borda e manchas amareladas no corte lateral",
+      "preco": 18.99,
+      "fotos_regua": 4,
+      "fotos_anunciadas": 4,
+      "caso": "TC-17",
+      "papel": "positivo: avarias citadas nominalmente na descricao"
+    },
+    {
+      "id": "L-3",
+      "titulo": "A Hora da Estrela Cadente",
+      "estado": "bom",
+      "avarias_lista": "",
+      "preco": 14.99,
+      "fotos_regua": 2,
+      "fotos_anunciadas": 1,
+      "caso": "TC-20",
+      "papel": "negativo: 1 foto, abaixo do minimo de 2 para bom estado"
+    },
+    {
+      "id": "L-4",
+      "titulo": "Nunca Minta para um Telepata",
+      "estado": "avariado",
+      "avarias_lista": "lombada gasta e fita adesiva",
+      "preco": 7.00,
+      "fotos_regua": 4,
+      "fotos_anunciadas": 3,
+      "caso": "TC-18",
+      "papel": "BLOQUEADO: abaixo do piso de R$ 12 da plataforma (EV-01, TC-24); anuncio inacessivel na vitrine"
+    },
+    {
+      "id": "L-7",
+      "titulo": "Eu Duvido Você Terminar Este Grimório",
+      "estado": "avariado",
+      "avarias_lista": "grifo e linha sublinhada",
+      "preco": 15.00,
+      "fotos_regua": 4,
+      "fotos_anunciadas": 4,
+      "caso": "TC-19",
+      "papel": "negativo: 4 fotos mas descricao generica nao cita as avarias"
+    },
+    {
+      "id": "L-12",
+      "titulo": "O Massacre da Dinastia Hope",
+      "estado": "avariado",
+      "avarias_lista": "oxidacao e manchas amareladas",
+      "preco": 45.00,
+      "fotos_regua": 4,
+      "fotos_anunciadas": 3,
+      "caso": "TC-21",
+      "papel": "negativo: 3 fotos, abaixo do minimo de 4 para avariado"
+    },
+    {
+      "id": "L-16",
+      "titulo": "A Androide de Limpeza",
+      "estado": "avariado",
+      "avarias_lista": "rasura e marcacao de texto",
+      "preco": 28.00,
+      "fotos_regua": 4,
+      "fotos_anunciadas": "fotos do L-17",
+      "caso": "TC-23",
+      "papel": "negativo manual: galeria com fotos de outro exemplar"
+    },
+    {
+      "id": "L-17",
+      "titulo": "Vidas Secas sob os Dois Sóis",
+      "estado": "bom",
+      "avarias_lista": "",
+      "preco": 17.50,
+      "fotos_regua": 2,
+      "fotos_anunciadas": null,
+      "caso": "TC-23 (origem)",
+      "papel": "doador integro das fotos do teste de troca"
+    },
+    {
+      "id": "L-18",
+      "titulo": "Torto Arado de Almas",
+      "estado": "avariado",
+      "avarias_lista": "corte lateral amarelado e marcas de manuseio",
+      "preco": 32.00,
+      "fotos_regua": 4,
+      "fotos_anunciadas": null,
+      "caso": "TC-22",
+      "papel": "negativo: descricao parcial omite as marcas de manuseio"
+    }
+  ]
+}
